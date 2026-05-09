@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="460" height="30" viewBox="0 0 460 30">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.122" y1="0.66" x2="0.993" y2="0.624" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#143872"/>
+      <stop offset="1" stop-color="#071732" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" y1="0.5" x2="1" y2="0.591" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#364f7f"/>
+      <stop offset="1" stop-color="#1b2840" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="0.915" y1="0.133" x2="0.418" y2="0.823" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc"/>
+      <stop offset="1" stop-color="#00c9ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-4" x1="0.063" y1="0.424" x2="0.961" y2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#006fff"/>
+      <stop offset="1" stop-color="#006fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g id="小标题" transform="translate(-43 -109)">
+    <g id="组_20" data-name="组 20" transform="translate(43 109)">
+      <g id="组_19" data-name="组 19" transform="translate(10)">
+        <path id="路径_15" data-name="路径 15" d="M2.276,0H427L411.724,30H-13Z" transform="translate(13)" opacity="0.67" fill="url(#linear-gradient)"/>
+        <path id="路径_15_-_轮廓" data-name="路径 15 - 轮廓" d="M2.962,1-11.22,29H421.038L435.22,1H2.962M2.195,0H437L421.805,30H-13Z" transform="translate(13)" opacity="0.51" fill="url(#linear-gradient-2)"/>
+      </g>
+      <path id="路径_16" data-name="路径 16" d="M0,0H6L-7,30h-6Z" transform="translate(13)" fill="url(#linear-gradient-3)"/>
+    </g>
+    <path id="联合_1" data-name="联合 1" d="M48.333,10,53.858,0H58L52.477,10Zm-6.9,0L46.952,0H51.1L45.571,10Zm-6.905,0L40.048,0H44.19L38.667,10Zm-6.9,0L33.142,0h4.144L31.762,10Zm-6.905,0L26.238,0h4.142L24.858,10Zm-6.9,0L19.333,0h4.143L17.952,10ZM6.9,10,12.429,0h4.142L11.047,10ZM0,10,5.523,0H9.666L4.142,10Z" transform="translate(438.641 119)" fill="url(#linear-gradient-4)"/>
+  </g>
+</svg>

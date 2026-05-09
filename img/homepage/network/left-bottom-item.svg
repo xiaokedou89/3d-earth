@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="37.357" height="30.209" viewBox="0 0 37.357 30.209">
+  <defs>
+    <linearGradient id="linear-gradient" y1="0.5" x2="1" y2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc"/>
+      <stop offset="1" stop-color="#037f7e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="1" x2="0" xlink:href="#linear-gradient"/>
+  </defs>
+  <g id="异常通道数" transform="translate(-1439.905 -290.605)">
+    <g id="组_167006" data-name="组 167006" transform="translate(1440.905 291)">
+      <path id="路径_87700" data-name="路径 87700" d="M1019.862-604.781v4.181" transform="translate(-1019.862 616.897)" fill="none" stroke="#05fdfc" stroke-width="2"/>
+      <path id="路径_87701" data-name="路径 87701" d="M1027.1-611.481l-6.864,5.5,6.864,6.32" transform="translate(-1020.051 620.257)" stroke="#05fdfc" stroke-width="1" opacity="0.45" fill="url(#linear-gradient)"/>
+      <path id="路径_87702" data-name="路径 87702" d="M1033.919-629.084l-4.837,3.761v21.667l4.837,4" transform="translate(-1024.486 629.084)" stroke="#05fdfc" stroke-width="1" opacity="0.1" fill="url(#linear-gradient)"/>
+    </g>
+    <g id="组_167007" data-name="组 167007" transform="translate(1466.828 291)">
+      <path id="路径_87700-2" data-name="路径 87700" d="M1019.862-604.781v4.181" transform="translate(-1010.428 616.897)" fill="none" stroke="#05fdfc" stroke-width="2"/>
+      <path id="路径_87701-2" data-name="路径 87701" d="M1020.239-611.481l6.864,5.5-6.864,6.32" transform="translate(-1017.857 620.257)" stroke="#05fdfc" stroke-width="1" opacity="0.45" fill="url(#linear-gradient-3)"/>
+      <path id="路径_87702-2" data-name="路径 87702" d="M1029.082-629.084l4.837,3.761v21.667l-4.837,4" transform="translate(-1029.082 629.084)" stroke="#05fdfc" stroke-width="1" opacity="0.1" fill="url(#linear-gradient-3)"/>
+    </g>
+    <g id="_7价格通道线" data-name="7价格通道线" transform="translate(1387.723 235.688)">
+      <path id="路径_87709" data-name="路径 87709" d="M155.109,156.609a2.08,2.08,0,1,0,2.942,0A2.082,2.082,0,0,0,155.109,156.609Zm2.474,2.476a1.422,1.422,0,1,1,0-2.012A1.423,1.423,0,0,1,157.583,159.085Z" transform="translate(-89.122 -90.487)" fill="#43dbff"/>
+      <path id="路径_87710" data-name="路径 87710" d="M71.06,66.1l2.17-2.17.45.45-2.17,2.17Zm-4.64,4.638,2.132-2.132.45.45L66.87,71.188Zm9.8-4.213a2.08,2.08,0,1,0,2.942,0A2.082,2.082,0,0,0,76.222,66.526ZM78.694,69a1.422,1.422,0,1,1,0-2.012A1.423,1.423,0,0,1,78.694,69ZM69.1,73.673a2.08,2.08,0,1,0,2.942,0A2.082,2.082,0,0,0,69.1,73.673Zm2.472,2.474a1.422,1.422,0,1,1,0-2.012A1.423,1.423,0,0,1,71.576,76.147Z" transform="translate(-2.556)" fill="#43dbff"/>
+      <path id="路径_87711" data-name="路径 87711" d="M76.13,66.768l2.619-2.619.45.45L76.58,67.218ZM63.819,79.078l2.625-2.625.45.45-2.625,2.625Zm5.136-5.133L73.6,69.3l.45.45L69.4,74.395Zm2.84,5.11,6.949-6.949.45.45L72.245,79.5Z" transform="translate(0 -0.215)" fill="#43dbff"/>
+    </g>
+  </g>
+</svg>

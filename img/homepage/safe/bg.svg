@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="441" height="322" viewBox="0 0 441 322">
+  <defs>
+    <linearGradient id="linear-gradient" x1="-0.012" y1="0.573" x2="1.007" y2="0.601" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#0b0f2f"/>
+      <stop offset="0.501" stop-color="#0b0f2f"/>
+      <stop offset="1" stop-color="#0b0f2f" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="底图">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="11" result="blur"/>
+      <feFlood flood-color="#05fdfc" flood-opacity="0.529" result="color"/>
+      <feComposite operator="out" in="SourceGraphic" in2="blur"/>
+      <feComposite operator="in" in="color"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g data-type="innerShadowGroup">
+    <rect id="底图-2" data-name="底图" width="441" height="322" opacity="0.37" fill="url(#linear-gradient)"/>
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#底图)">
+      <rect id="底图-3" data-name="底图" width="441" height="322" fill="#fff" opacity="0.37"/>
+    </g>
+  </g>
+</svg>

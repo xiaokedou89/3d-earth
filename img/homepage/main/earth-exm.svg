@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="121" height="146.5" viewBox="0 0 121 146.5">
+  <g id="组_167124" data-name="组 167124" transform="translate(-1276 -653)">
+    <g id="组_167118" data-name="组 167118" transform="translate(0 16)">
+      <g id="底图" transform="translate(1276 637)" fill="#0b0f2f" stroke="rgba(5,253,252,0.2)" stroke-width="1" opacity="0.52">
+        <rect width="121" height="146" stroke="none"/>
+        <rect x="0.5" y="0.5" width="120" height="145" fill="none"/>
+      </g>
+      <g id="组_167115" data-name="组 167115" transform="translate(1162.126 -460.351) rotate(62)">
+        <path id="路径_87927" data-name="路径 87927" d="M3372.719-2159.531l-1.842,1.082-16.814,35.28,18.932-34.179Z" transform="translate(-2240.857 2517.581)" fill="#32ed6a"/>
+      </g>
+      <g id="组_167116" data-name="组 167116" transform="translate(1162.126 -430.997) rotate(62)">
+        <path id="路径_87927-2" data-name="路径 87927" d="M3372.719-2159.531l-1.842,1.082-16.814,35.28,18.932-34.179Z" transform="translate(-2240.857 2517.581)" fill="#fc0"/>
+      </g>
+      <g id="组_167117" data-name="组 167117" transform="translate(1162.126 -405.564) rotate(62)">
+        <path id="路径_87927-3" data-name="路径 87927" d="M3372.719-2159.531l-1.842,1.082-16.814,35.28,18.932-34.179Z" transform="translate(-2240.857 2517.581)" fill="#ff4747"/>
+      </g>
+      <path id="减去_12" data-name="减去 12" d="M13,8.5H12V0h8.5V1H13V8.5Z" transform="translate(1264 637)" fill="#05fdfc"/>
+      <path id="减去_14" data-name="减去 14" d="M1,0H0V8.5H8.5v-1H1V0Z" transform="translate(1276 775)" fill="#05fdfc"/>
+      <path id="减去_16" data-name="减去 16" d="M1,0H0V8.5H8.5v-1H1V0Z" transform="translate(1396.5 645.5) rotate(180)" fill="#05fdfc"/>
+      <path id="减去_18" data-name="减去 18" d="M1,8.5H0V0H8.5V1H1V8.5Z" transform="translate(1396.5 783.5) rotate(180)" fill="#05fdfc"/>
+      <text id="回传" transform="translate(1288 659)" fill="#def" stroke="rgba(0,0,0,0)" stroke-width="1" font-size="14" font-family="MicrosoftYaHei, Microsoft YaHei" letter-spacing="0.1em"><tspan x="0" y="0">回传</tspan></text>
+      <text id="通畅" transform="translate(1288 713)" fill="#def" stroke="rgba(0,0,0,0)" stroke-width="1" font-size="14" font-family="MicrosoftYaHei, Microsoft YaHei" letter-spacing="0.1em"><tspan x="0" y="0">通畅</tspan></text>
+      <text id="投送" transform="translate(1288 686)" fill="#def" stroke="rgba(0,0,0,0)" stroke-width="1" font-size="14" font-family="MicrosoftYaHei, Microsoft YaHei" letter-spacing="0.1em"><tspan x="0" y="0">投送</tspan></text>
+      <text id="拥挤" transform="translate(1288 740)" fill="#def" stroke="rgba(0,0,0,0)" stroke-width="1" font-size="14" font-family="MicrosoftYaHei, Microsoft YaHei" letter-spacing="0.1em"><tspan x="0" y="0">拥挤</tspan></text>
+      <text id="中断" transform="translate(1288 767)" fill="#def" stroke="rgba(0,0,0,0)" stroke-width="1" font-size="14" font-family="MicrosoftYaHei, Microsoft YaHei" letter-spacing="0.1em"><tspan x="0" y="0">中断</tspan></text>
+      <rect id="矩形_108" data-name="矩形 108" width="27" height="3" transform="translate(1337 652)" fill="#ff7714"/>
+      <rect id="矩形_109" data-name="矩形 109" width="27" height="3" transform="translate(1337 678)" fill="#05fdfc"/>
+    </g>
+  </g>
+</svg>

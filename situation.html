@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+  	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+		<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+		<title>数据展示</title>
+		<script src="./js/theme.js"></script>
+		<script src="./js/resize.js"></script>
+		<link href="./assets/css/font-awesome.min.css" rel="stylesheet" />
+		<link href="./css/homepage.css" rel="stylesheet" />
+		<link href="./css/my-earth.css" rel="stylesheet" />
+		<link href="./assets/iconfont3/iconfont.css" rel="stylesheet" />
+		<style type="text/css">
+  	  uas-loading {
+  	    display: none;
+  	  }
+  	</style>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 全屏背景平铺(1) -->
+      <div class="earth-container">
+        <!-- <my-earth ref="earth" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth> -->
+        <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
+      </div>
+			<!-- 顶部占位(3) -->
+			<div class="position-top">
+        <!-- 背景及中间的标题 -->
+        <div class="position-top-title">
+          <img class="position-top-title-icon" src="./img/homepage/main/main-top-title.svg" />
+        </div>
+        <div class="position-top-between">
+          <!-- 左侧时间 -->
+          <!-- <h3 class="position-top-time">{{ deelHomeTimeFormat }}</h3> -->
+          <div class="situation-data">
+            <img :src="`./img/homepage/data/bg-${dateBg}.svg`" />
+            <el-date-picker :default-time="['00:00:00', '23:59:59']" @focus="datePickerFocus" @blur="datePickerBlur" v-model="topTimeRange" type="daterange" align="right" unlink-panels range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions" @change="timeRangeChange" value-format="timestamp"> </el-date-picker>
+            <el-tooltip placement="top" content="目前支持任务支撑态势的图表更新">
+              <i class="timer-pick-des"></i>
+            </el-tooltip>
+          </div>
+          <!-- 右侧按钮 -->
+          <div class="position-top-actions">
+            <!-- 进入工作台 -->
+            <div class="position-top-action enter" @click="linkToIndex">
+              <img class="position-top-action-bg" src="./img/homepage/main/enter-border.svg" />
+              <div class="position-top-action-inner">
+                <img class="position-top-action-txt" src="./img/homepage/main/enter.svg" />
+              </div>
+            </div>
+            <!-- 退出 -->
+            <div class="position-top-action out" @click="quit">
+              <img class="position-top-action-bg" src="./img/homepage/main/out-border.svg" />
+              <div class="position-top-action-inner">
+                <img class="position-top-action-txt" src="./img/homepage/main/out.svg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+			<!-- 地球上方(3) -->
+      <div class="position-center-top" @mousewheel="positionTopWheel">
+        <!-- 地球的图例及控制板 -->
+        <div class="position-center-top-controls">
+          <!-- 飞线类型控制 -->
+          <div class="center-control-item">
+            <div class="center-control-item-line" :class="{active: item.flag}" v-for="(item, index) in lineColors" @click="clearFlyLine('lineType', item)">
+              <span class="line-label">{{ item.label }}</span>
+              <div class="line">
+                <div class="line-inner" :style="{backgroundColor: getLineColor(item)}"></div>
+              </div>
+            </div>
+          </div>
+          <!-- 地球控制面板 -->
+          <div class="center-earth-control">
+            <a class="earth-control-item" @click="changeRotation">
+              <i class="iconfont icon-diqiu"></i>
+              <span>{{ positionTop.earthRotation ? '暂停旋转' : '开启旋转' }}</span>
+            </a>
+            <a class="earth-control-item" @click="resetCamera">
+              <i class="iconfont icon-sijiaoxinxi1"></i>
+              <span>恢复视角</span>
+            </a>
+            <a class="earth-control-item" :class="{disabled: positionTop.isfocusDisabled}" @click="changeMode">
+              <i class="iconfont icon-icon_kongzhi"></i>
+              <span>{{ positionTop.isfocus ? '数据模式' : '专注模式' }}</span>
+            </a>
+          </div>
+          <!-- 地球控制面板 -->
+          <div class="center-earth-control">
+            <a class="earth-control-item" @click="changeLineMode">
+              <i class="iconfont" :class="{'icon-xuxian': !positionTop.isDashed, 'icon-shixian': positionTop.isDashed}"></i>
+              <span>{{ positionTop.isDashed ? '实线通道' : '虚线通道' }}</span>
+            </a>
+            <a class="earth-control-item" @click="closeMarkupPoint">
+              <i class="iconfont icon-dingwei1"></i>
+              <span>{{ positionTop.showMarkupPoint ? '关闭位点' : '开启位点' }}</span>
+            </a>
+            <a class="earth-control-item" @click="changeFlyLineSize">
+              <i class="iconfont icon-cuxixiantiao"></i>
+              <span>{{ getFlyLineSize }}</span>
+            </a>
+          </div>
+          <!-- 飞线状态控制 -->
+          <div class="center-control-item">
+            <div class="center-control-item-line" :class="{active: item.flag}" v-for="(item, index) in flyLineColors" @click="clearFlyLine('lineStatus', item)">
+              <span class="line-label">{{ item.label }}</span>
+              <div class="line">
+                <!-- <div class="fly-line-inner" :style="{backgroundColor: getLineColor(item)}"></div> -->
+                <div class="fly-line-inner" :style="{backgroundColor: getLineColor(item)}">
+                  <div class="fly-line-inner-content" :style="{backgroundColor: getLineColor(item)}"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="center-top-item" v-for="(item, index) in centerTop" :key="index">
+          <div class="left">
+            <img :src="`./img/homepage/center-top/ct${index}.svg`" />
+          </div>
+          <div class="right">
+            <h3 class="right-value">
+              <!-- @@ -->
+              <!-- <div class="num-item-20" v-for="(num, ind) in item.value" :key="ind">
+							<div class="num-item-inner" :data-height="num">
+								<div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+							</div>
+						</div> -->
+              <!-- <div class="num-item-20" v-for="(num, ind) in formatNumsData(item.value).value" :key="ind">
+							<div class="num-item-dot" v-if="num === '.'">.</div>
+							<div class="num-item-inner" :data-height="num" v-else>
+								<div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+							</div>
+						</div>
+						<span class="num-item-inner-item">{{ formatNumsData(item.value).unit }}</span> -->
+              <div class="num-item-20" v-for="(num, ind) in formatNumsData(item.value, 1, 1).value" :key="ind" :class="{dot: num === '.'}">
+                <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                  <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                </div>
+              </div>
+              <span class="num-item-inner-item">{{ formatNumsData(item.value).unit }}</span>
+              <span class="num-item-inner-item" v-if="index === (centerTop.length - 1) || index === 1">%</span>
+            </h3>
+            <div class="right-label">{{ item.label }}</div>
+          </div>
+        </div>
+        <div class="position-center-top-track" v-show="positionTop.showTracks">
+          <div class="track-item" :class="{active: !positionTop.showControls}" @click="activeShowControls"></div>
+          <div class="track-item" :class="{active: positionTop.showControls}" @click="deactiveShowControls"></div>
+        </div>
+      </div>
+			<!-- 地球上方 - 两个角的外部 -->
+      <div class="position-center-top-corner">
+        <!-- 左上角 -->
+        <div class="left corner-item">
+          <div class="arrow"></div>
+          <div class="content">
+            <div class="left">
+              <div class="counts number-font">
+                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.A.num).value" :key="index">
+                  <div class="num-item-inner" :data-height="num">
+                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                  </div>
+                </div>
+                <span class="unit">{{formatNumsData(corner.A.num).unit}}</span>
+              </div>
+              <div class="label">A业务</div>
+            </div>
+            <div class="right">
+              <div class="text">
+                <span>累计回传</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.A.count, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatBytesData(corner.A.count, 1).unit}}B</span>
+                </div>
+                <span>数据</span>
+              </div>
+              <div class="text">
+                <span>实时带宽</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.A.rate, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatBytesData(corner.A.rate, 1).unit}}bps</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 右上角 -->
+        <div class="right corner-item">
+          <div class="arrow"></div>
+          <div class="content">
+            <div class="left">
+              <div class="text">
+                <span>累计传输</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.B.count, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatNumsUnit(corner.B.count, 1).unit}}条</span>
+                </div>
+                <span>数据</span>
+              </div>
+              <div class="text">
+                <span>实时带宽</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.B.rate, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatBytesData(corner.B.rate, 1).unit}}bps</span>
+                </div>
+              </div>
+            </div>
+            <div class="right">
+              <div class="counts number-font">
+                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.B.num).value" :key="index">
+                  <div class="num-item-inner" :data-height="num">
+                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                  </div>
+                </div>
+                <span class="unit">{{formatNumsData(corner.B.num).unit}}</span>
+              </div>
+              <div class="label">B业务</div>
+            </div>
+          </div>
+        </div>
+      </div>
+			<!-- 地球下方 - 两个角的外部 -->
+      <div class="position-center-bottom-corner">
+        <!-- 左下角 -->
+        <div class="left corner-item">
+          <div class="arrow"></div>
+          <div class="content">
+            <div class="left">
+              <div class="counts number-font">
+                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.C.num).value" :key="index">
+                  <div class="num-item-inner" :data-height="num">
+                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                  </div>
+                </div>
+                <span class="unit">{{formatNumsData(corner.C.num).unit}}</span>
+              </div>
+              <div class="label">C业务</div>
+            </div>
+            <div class="right">
+              <div class="text">
+                <img src="" alt="">
+                <span>累计投送</span>
+                <div class="counts number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.C.count).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatNumsUnit(corner.C.count).unit}}次</span>
+                </div>
+              </div>
+              <div class="text">
+                <span>实时带宽</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.C.rate, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatBytesData(corner.C.rate, 1).unit}}bps</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 右下角 -->
+        <div class="right corner-item">
+          <div class="arrow"></div>
+          <div class="content">
+            <div class="left">
+              <div class="text">
+                <span>累计支撑</span>
+                <div class="counts number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.O.count, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatNumsUnit(corner.O.count, 1).unit}}次</span>
+                </div>
+              </div>
+              <div class="text">
+                <span>实时带宽</span>
+                <div class="number-font">
+                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.O.rate, 1).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{formatBytesData(corner.O.rate, 1).unit}}bps</span>
+                </div>
+              </div>
+            </div>
+            <div class="right">
+              <div class="counts number-font">
+                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.O.num).value" :key="index">
+                  <div class="num-item-inner" :data-height="num">
+                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                  </div>
+                </div>
+                <span class="unit">{{formatNumsData(corner.O.num).unit}}</span>
+              </div>
+              <div class="label">日常保障</div>
+            </div>
+          </div>
+        </div>
+      </div>
+			<!-- 地球下方(3) -->
+      <div class="position-center-bottom">
+        <!-- 支撑态势标题 -->
+        <div class="position-title">
+          <img class="position-title-content" src="./img/homepage/support/title.svg" />
+        </div>
+        <!-- 支撑态势 -->
+        <div class="support-section" id="support-chart"></div>
+      </div>
+			<!-- 左下(3) -->
+      <div class="position-left">
+				<div class="position-left-border-top"></div>
+        <div class="position-left-border-center"></div>
+        <div class="position-left-border-bottom"></div>
+				<div class="position-left-container">
+					<!-- 上方的资源部分 -->
+					<div class="position-common-section left-top-section">
+						<!-- 资源池标题 -->
+						<div class="position-title">
+              <img class="position-title-content" src="./img/homepage/resource/title-pool-change.svg" />
+            </div>
+						<!-- 资源池 -->
+						<div class="resource-pool-section left-top-section-common">
+              <!-- 资源池第一个item -->
+              <div class="pool-item">
+                <div class="pool-item-top" :class="{select: resourcePool.key === 'total'}" @click="changeResourcePool('total')">
+                  <div class="left total"></div>
+                  <div class="right">
+                    <div class="pool-item-title" style="justify-content: center;">资源储备</div>
+                    <div class="pool-item-count">
+                      <h3 class="transfer-count-value number-font">
+                        <div class="num-item-16" v-for="(num, index) in formatNumsData(resourcePool.total.count).value" :key="index" :class="{dot: num === '.'}">
+                          <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                            <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                          </div>
+                        </div>
+                        <span class="unit">{{ formatNumsData(resourcePool.total.count).unit }}</span>
+                        <span class="unit">个</span>
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+                <!-- 匿名采购资源数量 -->
+                <div class="pool-item-bottom">
+                  <div class="pool-item-bottom-label">
+                    <img src="./img/homepage/resource/arrow.svg" />
+                    <span>匿名采购资源</span>
+                  </div>
+                  <div class="pool-item-bottom-count number-font">
+                  	<div class="num-item-14" v-for="(num, index) in formatNumsData(resourcePool[resourcePool.key].anonymous).value" :key="index" :class="{dot: num === '.'}">
+                    	<div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      	<div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    	</div>
+                  	</div>
+                  	<span class="unit">{{ formatNumsData(resourcePool[resourcePool.key].anonymous).unit }}</span>
+                  	<span class="unit">个</span>
+                	</div>
+              	</div>
+            	</div>
+              <!-- 资源池第二个item -->
+              <div class="pool-item">
+                <div class="pool-item-top" :class="{select: resourcePool.key === 'use'}" @click="changeResourcePool('use')">
+                  <div class="left current"></div>
+                  <div class="right">
+                    <div class="pool-item-title">资源用量<span class="percentage">{{ getResourcePoolPercentage }}</span></div>
+                    <div class="pool-item-count">
+                      <h3 class="transfer-count-value number-font">
+                        <div class="num-item-16" v-for="(num, index) in formatNumsData(resourcePool.use.count).value" :key="index" :class="{dot: num === '.'}">
+                          <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                            <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                          </div>
+                        </div>
+                        <span class="unit">{{ formatNumsData(resourcePool.use.count).unit }}</span>
+                        <span class="unit">个</span>
+                      </h3>
+                  	</div>
+                	</div>
+              	</div>
+                <!-- 公开获取资源数量 -->
+                <div class="pool-item-bottom">
+                  <div class="pool-item-bottom-label">
+                    <img src="./img/homepage/resource/arrow.svg" />
+                    <span>公共获取资源</span>
+                  </div>
+                  <div class="pool-item-bottom-count number-font">
+                    <div class="num-item-14" v-for="(num, index) in formatNumsData(resourcePool[resourcePool.key].open).value" :key="index" :class="{dot: num === '.'}">
+                      <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                        <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                      </div>
+                    </div>
+                    <span class="unit">{{ formatNumsData(resourcePool[resourcePool.key].open).unit }}</span>
+                    <span class="unit">个</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+						<!-- 资源分布标题 -->
+            <div class="position-title">
+              <img class="position-title-content" src="./img/homepage/resource/title-distribution.svg" />
+            </div>
+						<!-- 资源分布-上方饼图 trigger-custrom -->
+						<div class="resource-distribution-top left-top-section-common">
+              <div class="left" id="distribution-pie-chart" style="width: 50%;height: 100%"></div>
+              <div class="right">
+                <div class="distribution-pie-item" :class="{close: item.legendFlag === false}" v-for="(item, index) in charts.distributionPie.data" :key="index" @click="triggleDistributionPie(item)">
+                  <div class="left">
+                    <div class="icon-outer">
+                      <i class="icon" :style="{backgroundColor: pieChart3dColors[index]}"></i>
+                    </div>
+                  	<div class="distribution-legend-item-name">{{ pieNameFormate(item.name) }}</div>
+                	</div>
+                	<div class="right">{{ item.rate }}%</div>
+              	</div>
+            	</div>
+          	</div>
+						<!-- 资源分布-中间折线 -->
+            <div class="resource-distribution-center left-top-section-common" id="distribution-line-chart"></div>
+						<!-- 资源分布-下方数字 -->
+            <div class="resource-distribution-bottom left-top-section-common">
+              <!-- 上方三个 -->
+              <div class="top">
+                <!-- 云专线 -->
+                <div class="distribution-count-item">
+                  <div class="icon icon1"></div>
+                  <div class="content">
+                    <div class="count number-font">
+                      <div class="num-item-14" v-for="(num, ind) in formatNumsData(resourceDistribution.item1).value" :key="ind" :class="{dot: num === '.'}">
+                        <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                          <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                        </div>
+                      </div>
+                      <span class="num-item-inner-item">{{ formatNumsData(resourceDistribution.item1).unit }}</span>
+                    </div>
+                    <div class="label">云专线厂商</div>
+                  </div>
+                </div>
+                <!-- 云服务 -->
+                <div class="distribution-count-item">
+                  <div class="icon icon2"></div>
+                  <div class="content">
+                    <div class="count number-font">
+                      <div class="num-item-14" v-for="(num, ind) in formatNumsData(resourceDistribution.item2).value" :key="ind" :class="{dot: num === '.'}">
+                        <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                          <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                        </div>
+                      </div>
+                      <span class="num-item-inner-item">{{ formatNumsData(resourceDistribution.item2).unit }}</span>
+                    </div>
+                    <div class="label">云服务厂商</div>
+                  </div>
+                </div>
+                <!-- 代理供应商 -->
+                <div class="distribution-count-item">
+                  <div class="icon icon3"></div>
+                  <div class="content">
+                    <div class="count number-font">
+                      <div class="num-item-14" v-for="(num, ind) in formatNumsData(resourceDistribution.item3).value" :key="ind" :class="{dot: num === '.'}">
+                        <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                          <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                        </div>
+                      </div>
+                      <span class="num-item-inner-item">{{ formatNumsData(resourceDistribution.item3).unit }}</span>
+                    </div>
+                    <div class="label">代理供应商</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 下方 -->
+              <div class="bottom">
+                <!-- 公开代理采集渠道 -->
+                <div class="distribution-count-item">
+                  <div class="icon icon4"></div>
+                  <div class="content">
+                    <div class="count number-font">
+                      <div class="num-item-14" v-for="(num, ind) in formatNumsData(resourceDistribution.item4).value" :key="ind" :class="{dot: num === '.'}">
+                        <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                          <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                        </div>
+                      </div>
+                      <span class="num-item-inner-item">{{ formatNumsData(resourceDistribution.item4).unit }}</span>
+                    </div>
+                    <div class="label">公开代理采集渠道</div>
+                  </div>
+                </div>
+                <!-- IOT -->
+                <div class="distribution-count-item">
+                  <div class="icon icon5"></div>
+                  <div class="content">
+                    <div class="count number-font">
+                      <div class="num-item-14" v-for="(num, ind) in formatNumsData(resourceDistribution.item5).value" :key="ind" :class="{dot: num === '.'}">
+                        <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                          <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                        </div>
+                      </div>
+                      <span class="num-item-inner-item">{{ formatNumsData(resourceDistribution.item5).unit }}</span>
+                    </div>
+                    <div class="label">IOT设备补给渠道</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+					</div>
+					<!-- 区域分布 - earthleftdata -->
+					<div class="left-bottom-section">
+            <div class="left-bottom-content">
+              <div class="left-item resource-s-item">
+                <div class="left-item-content">
+                  <span class="label">可用区域:</span>
+                  <span class="count">
+                    <img v-if="resourceStatis.sat.countryUrl" :src="resourceStatis.sat.countryUrl" />
+                    <span>{{ resourceStatis.sat.country }}</span>
+                  </span>
+                </div>
+                <div class="left-item-content">
+                  <span class="label">可用数量:</span>
+                  <span class="count">{{ resourceStatis.sat.count }}</span>
+                </div>
+              </div>
+              <!-- 中间的资源 -->
+              <!-- <div class="right-item resource-s-item">
+                <div class="left">
+                  <el-radio 
+                    v-model="resourceStatis.centerSelect.key" 
+                    class="type-item" v-for="(item, index) in resourceStatis.center" 
+                    :key="item.key" 
+                    :label="item.key" 
+                    :value="item.key"
+                    @change="resourceStatisCenterChange(item)"
+                  >
+                    {{ pieNameFormate(item.key) }}
+                  </el-radio>
+                </div>
+                <div class="center"></div>
+                <transition name="resource" mode="out-in">
+                  <div class="right" :key="resourceStatis.centerSelect.key">
+                    <template v-for="(value, key) in resourceStatis.centerSelect.selectObj">
+                      <span class="label" v-if="resourceSelectIsShow(key)">{{ computedResourceSelectLabel(key) }}</span>
+                      <span class="count" v-if="resourceSelectIsShow(key)">{{ computedResourceSelectValue(value) }}</span>
+                    </template>
+                  </div>
+                </transition>
+              </div> -->
+              <div class="center-item resource-s-item" :class="[`center-item-${index}`]" v-for="(item, index) in resourceStatis.center" :key="index">
+                <div class="title">{{pieNameFormate(item.resourceType)}}</div>
+                <div class="content">
+                  <template v-if="item.count && typeof item.count !== 0">
+                    <span class="des">总数量为</span><span class="value">{{ item.count }}</span>个;
+                  </template>
+                  <template v-if="Array.isArray(item.districtList) && item.districtList.length > 0">
+                    <span class="des">分布在</span><span class="value">{{ item.districtList[0] }}</span>;
+                  </template>
+                  <template v-if="item.districtCount && item.districtCount !== 0">
+                    <span class="des">覆盖</span><span class="value">{{ item.districtCount }}</span>个地区;
+                  </template>
+                  <template v-if="(item.dynamicCount ||  item.staticCount) && (item.dynamicCount !== 0 || item.staticCount !== 0)">
+                    <span class="des">拥有</span>
+                    <span class="des">动态IP<span class="value">{{ item.dynamicCount }}</span>个</span>,
+                    <span class="des">静态IP<span class="value">{{ item.staticCount }}</span>个</span>;
+                  </template>
+                  <template v-if="item.protocolCount || item.sourceCount || item.vendorCount || item.deviceCount">
+                    <span class="des">包含</span>
+                    <span v-if="item.vendorCount"><span class="value">{{item.vendorCount}}</span>个厂商</span>
+                    <span v-if="item.sourceCount"><span class="value">{{item.sourceCount}}</span>个来源渠道</span>
+                    <span v-if="item.deviceCount"><span class="value">{{item.deviceCount}}</span个服务设备</span>
+                    <span v-if="item.potocolCount"><span class="value">{{item.potocolCount}}</span>类协议</span>
+                  </template>
+                </div>
+              </div>
+              <!-- 地下 -->
+              <div class="bottom-item resource-s-item">
+                <div class="bottom-item-content">
+                  <span class="label">可用区域:</span>
+                  <span class="count">{{ resourceStatis.bottom.count }}</span>
+                </div>
+                <div class="bottom-item-content">
+                  <span class="label">专线带宽:</span>
+                  <span class="count">{{ resourceStatis.bottom.bandwidth }}bps</span>
+                </div>
+              </div>
+            </div>
+          </div>
+				</div>
+			</div>
+			<!-- 右下(3) -->
+			<div class="position-right">
+				<div class="position-right-border-top"></div>
+        <div class="position-right-border-center"></div>
+        <div class="position-right-border-bottom"></div>
+				<div class="position-right-container">
+					<!-- 上方安全态势 -->
+					<div class="right-top-section position-common-section">
+            <!-- 安全态势标题 -->
+            <div class="position-title">
+              <img class="position-title-content" src="./img/homepage/safesituation/title.svg" />
+              <div class="safe-button" @click="showDialoger"></div>
+            </div>
+            <!-- 安全态势内容部分 -->
+            <div class="safe-situation-section right-section-common">
+              <!-- 安全评估指数 -->
+              <div class="safe-situation-count">
+                <div class="content">
+                  <div class="number-font">
+                    <div class="num-item-16" v-for="(num, index) in safeSituation.indexCount" :key="index" :class="{dot: num === '.'}">
+                      <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                        <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="label">
+                    安全评估指数
+                    <el-tooltip content="本指数由近期节点健壮率、风险处置率、自动研判率、漏洞修复率和配置加固率共同加权计算得出" placement="top">
+                      <span class="tooltip">!</span>
+                    </el-tooltip>
+                  </span>
+                </div>
+              </div>
+              <!-- 风险处置率 -->
+              <div class="safe-situation-item">
+                <div class="label">风险处置率</div>
+                <div class="safe-count number-font">
+                  <div class="num-item-14" v-for="(num, index) in formatNumsUnit(safeSituation.saferisk.count).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{ formatNumsUnit(safeSituation.saferisk.count).unit }}</span>
+                  <span class="unit">个</span>
+                </div>
+                <span class="safe-rate">{{ safeSituation.saferisk.rate }}%</span>
+              </div>
+              <!-- 告警降噪率 -->
+              <div class="safe-situation-item">
+                <div class="label">告警降噪率</div>
+                <div class="safe-count number-font">
+                  <div class="num-item-14" v-for="(num, index) in formatNumsUnit(safeSituation.warning.count).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{ formatNumsUnit(safeSituation.warning.count).unit }}</span>
+                  <span class="unit">个</span>
+                </div>
+                <span class="safe-rate">{{ safeSituation.warning.rate }}%</span>
+              </div>
+              <!-- 节点健壮率 -->
+              <div class="safe-situation-item">
+                <div class="label">节点健壮率</div>
+                <div class="safe-count number-font">
+                  <div class="num-item-14" v-for="(num, index) in formatNumsUnit(safeSituation.node.count).value" :key="index" :class="{dot: num === '.'}">
+                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                    </div>
+                  </div>
+                  <span class="unit">{{ formatNumsUnit(safeSituation.node.count).unit }}</span>
+                  <span class="unit">个</span>
+                </div>
+                <span class="safe-rate">{{ safeSituation.node.rate }}%</span>
+              </div>
+            </div>
+          </div>
+					<!-- 中间加固状态 -->
+					<div class="right-center-section position-common-section">
+            <!-- 安全加固标题 -->
+            <div class="position-title">
+              <img class="position-title-content" src="./img/homepage/reinforce/title.svg" />
+            </div>
+            <!-- 上部的两个部分 -->
+            <div class="safe-reinforce-top">
+              <!-- transfer-section-count-item -->
+              <div class="safe-reinforce-item">
+                <div class="icon">
+                  <img src="./img/homepage/reinforce/item-icon0.svg" />
+                </div>
+                <div class="content">
+                  <div class="label">漏洞修复率 <span class="safe-rate">{{ safeReinforce.bug.rate }}%</span></div>
+                  <h3 class="number-font">
+                    <div class="num-item-16" v-for="(num, index) in formatNumsData(safeReinforce.bug.count).value" :key="index" :class="{dot: num === '.'}">
+                      <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                        <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                      </div>
+                    </div>
+                    <span class="unit">{{formatNumsData(safeReinforce.bug.count).unit}}个</span>
+                  </h3>
+                </div>
+              </div>
+              <div class="safe-reinforce-item">
+                <div class="icon">
+                  <img src="./img/homepage/reinforce/item-icon1.svg" />
+                </div>
+                <div class="content">
+                  <div class="label">配置加固率 <span class="safe-rate">{{ safeReinforce.config.rate }}%</span></div>
+                  <h3 class="number-font">
+                    <div class="num-item-16" v-for="(num, index) in formatNumsData(safeReinforce.config.count).value" :key="index" :class="{dot: num === '.'}">
+                      <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                        <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                      </div>
+                    </div>
+                    <span class="unit">{{formatNumsData(safeReinforce.config.count).unit}}个</span>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <!-- 下方的饼图部分 -->
+            <div class="safe-reinforce-bottom right-section-common">
+              <div class="left" id="reinforce-pie-chart"></div>
+              <div class="center"></div>
+              <div class="right">
+                <!-- trigger-custrom -->
+                <div class="reinforce-legend-item" :class="{close: item.legendFlag === false}" v-for="(item, index) in charts.safeReinforce.data" :key="index" @click="triggleSafeLegend(item)">
+                  <div class="left">
+                    <div class="icon-outer">
+                      <i class="icon" :style="{backgroundColor: pieChartColors[index]}"></i>
+                    </div>
+                    <div class="reinforce-legend-item-name">{{ item.labelName }}</div>
+                  </div>
+                  <div class="right">{{ item.rightRate === 1 ? item.rightRate * 100 : (item.rightRate * 100).toFixed(2) }}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+					<!-- 下方风险统计 -->
+					<div class="right-bottom-section position-common-section">
+            <!-- 安全风险统计标题 -->
+            <div class="position-title">
+              <img class="position-title-content" src="./img/homepage/saferisk/title.svg" />
+            </div>
+            <!-- 安全风险 - 上方 -->
+            <div class="risk-top-section">
+              <div class="left" id="risk-top-chart"></div>
+              <div class="center"></div>
+              <!-- 右侧的国家统计 -->
+              <div class="right">
+                <div class="header">攻击源国家TOP10</div>
+                <div class="body">
+                  <div class="country-item" v-for="(item, index) in countryTopList">
+                    <div class="left">
+                      <div class="item-index">{{ index + 1 }}</div>
+                      <img v-if="item.name" class="item-image" :src="getCountryObj(item.name).imageUrl" />
+                      <div class="item-name">{{ getCountryObj(item.name).chineseName }}</div>
+                    </div>
+                    <div class="right">
+                      <div class="item-count">{{ item.count }}</div> 
+                      <!-- <div class="item-count">{{ formatNumsData(item.count).value + formatNumsData(item.count).unit }}</div> -->
+                      <!-- <div class="item-change" :class="{up: item.change > 0, down: item.change < 0}">
+                        <img v-if="item.change > 0" src="./img/homepage/saferisk/up-arrow.svg" />
+                        <img v-if="item.change < 0" src="./img/homepage/saferisk/down-arrow.svg" />
+                        {{ item.change === 0 ? '' : Math.abs(item.change) }}
+                      </div> -->
+                      <div class="item-change" :class="{up: item.change > 0, down: item.change < 0}">
+                        {{''}}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 安全风险 - 中间图表 -->
+            <div class="risk-center-section" id="risk-center-chart"></div>
+            <!-- 安全风险 - 下方威胁预警 -->
+            <div class="risk-bottom-section">
+              <div class="risk-bottom-section-header">
+                <div class="left">
+                  <img class="header-icon" src="./img/homepage/saferisk/warning-icon.svg" />
+                  <span class="header-title">威胁预警</span>
+                </div>
+                <div class="right">
+                  <div class="type-item" v-for="(item, index) in safeThreatTypes" :key="index">
+                    <img :src="getSafeThreatItemStatus(item.value)" />
+                    <span>{{ item.label }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="risk-bottom-section-body" v-if="safeThreatList.length > 0">
+                <div class="watch-item" v-for="(item, index) in safeThreatList" :key="index">
+                  <div class="watch-item-status">
+                    <img :src="getSafeThreatItemStatus(item.status)" />
+                  </div>
+                  <div class="watch-item-content">
+                    <div class="left">
+                      <div class="icon">
+                        <img src="./img/homepage/watch/icon-1.svg" />
+                      </div>
+                      <!-- <div class="watch-item-summy">{{item.des}}</div> -->
+                      <el-tooltip :disabled="!item.des" placement="top" effect="dark" :content="item.des" open-delay="600">
+                        <div class="watch-item-summy">{{item.name}}</div>
+                      </el-tooltip>
+                    </div>
+                    <div class="right">{{ item.time }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="risk-bottom-section-body-empty" v-else>
+                <img src="./img/homepage/watch/empty.svg" />
+                <div class="empty-label">暂无数据</div>
+              </div>
+            </div>
+          </div>
+
+				</div>
+			</div>
+			<!-- 安全信息一览弹框 -->
+      <div class="mask" v-show="dialogFlag">
+          <div class="dialoger-container" v-show="dialogFlag">
+            <div class="close" @click="closeDialoger"></div>
+            <div class="inner">
+              <div class="header"></div>
+              <div class="content">
+                <div class="item" v-for="(content, index) in dialogerContent" :key="index">
+                  <div class="item-content" :class="{disabled: item.disabled}" v-for="(item, ind) in content.texts" :key="ind">
+                    <div class="left">
+                      <img class="icon" src="./img/homepage/dialoger/arrow.svg" />
+                      <span class="text">{{ item.text }}</span>
+                    </div>
+                    <img v-if="!item.disabled" class="right" src="./img/homepage/dialoger/safe.svg" />
+                    <img v-else class="right" src="./img/homepage/dialoger/disabled.svg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+		</div>
+		<script src="./js/dict.js"></script>
+		<script src="./assets/js/vue.js"></script>
+		<script src="./js/day.js"></script>
+		<script src="./assets/element-ui/index.js"></script>
+		<script src="./assets/vue-echarts/echarts@5.1.2.js"></script>
+		<script src="./js/captcha.js"></script>
+    <script src="./js/chartsGL.js"></script>
+		<script src="./assets/js/three/build/three.js"></script>
+    <script src="./assets/js/three/build/OrbitControls.js"></script>
+    <script src="./assets/js/three/build/EffectComposer.js"></script>
+    <script src="./assets/js/three/build/OutlinePass.js"></script>
+    <script src="./assets/js/three/build/RenderPass.js"></script>
+    <script src="./assets/js/three/build/CopyShader.js"></script>
+    <script src="./assets/js/three/build/ShaderPass.js"></script>
+    <script src="./assets/js/three/build/LuminosityHighPassShader.js"></script>
+    <script src="./assets/js/three/build/UnrealBloomPass.js"></script>
+    <script src="./assets/js/three/build/GLTFLoader.js"></script>
+		<script src="./assets/js/html2canvas.js"></script>
+		<script src="./assets/js/gsap.min.js"></script>
+		<script src="./js/earth.js"></script>
+		<script src="./js/view.js"></script>
+		<script src="./datas/requestDatas.js"></script>
+		<script src="./js/index.js"></script>
+	</body>
+</html>

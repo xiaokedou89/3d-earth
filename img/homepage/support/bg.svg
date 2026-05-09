@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="831.967" height="30" viewBox="0 0 831.967 30">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.009" y1="0.71" x2="0.993" y2="0.624" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#143872"/>
+      <stop offset="1" stop-color="#071732" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" y1="0.5" x2="1" y2="0.591" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#364f7f"/>
+      <stop offset="1" stop-color="#1b2840" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="0.915" y1="0.133" x2="0.418" y2="0.823" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc"/>
+      <stop offset="1" stop-color="#00c9ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g id="下面小标题" transform="translate(-64 -125)">
+    <g id="组_19" data-name="组 19" transform="translate(-2 2)">
+      <path id="路径_15" data-name="路径 15" d="M1.718,0H800.9L786.187,30H-13Z" transform="translate(89 123)" opacity="0.67" fill="url(#linear-gradient)"/>
+      <path id="路径_15_-_轮廓" data-name="路径 15 - 轮廓" d="M2.391,1-11.283,29H793.575L807.25,1H2.391m-.74-1H808.967L794.315,30H-13Z" transform="translate(89 123)" opacity="0.51" fill="url(#linear-gradient-2)"/>
+    </g>
+    <path id="路径_16" data-name="路径 16" d="M0,0H6L-7,30h-6Z" transform="translate(77 125)" fill="url(#linear-gradient-3)"/>
+  </g>
+</svg>

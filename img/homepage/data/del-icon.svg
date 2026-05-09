@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13">
+  <g id="删除" transform="translate(0.5 0.5)" opacity="0.57">
+    <rect id="矩形" width="12" height="12" fill="#222" stroke="rgba(0,0,0,0)" stroke-width="1" opacity="0"/>
+    <path id="路径" d="M5.022,0a5.022,5.022,0,1,0,5.022,5.022A5.027,5.027,0,0,0,5.022,0Z" transform="translate(0.721 0.721)" fill="none" stroke="#05fdfc" stroke-miterlimit="10" stroke-width="0.5"/>
+    <path id="路径-2" data-name="路径" d="M4.323.525,3.826,0,2.146,1.668.5,0,0,.525,1.649,2.162,0,3.829l.5.494L2.146,2.656l1.68,1.668.5-.494L2.675,2.162Z" transform="translate(3.603 3.603)" fill="#05fdfc" stroke="rgba(0,0,0,0)" stroke-width="1"/>
+  </g>
+</svg>

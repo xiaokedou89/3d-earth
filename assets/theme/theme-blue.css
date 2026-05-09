@@ -1,0 +1,63 @@
+:root {
+  --primary-color: #0062d9;
+  --primary-color-light9: rgba(0, 98, 217, 0.9);
+  --primary-color-light8: rgba(0, 98, 217, 0.8);
+  --primary-color-light7: rgba(0, 98, 217, 0.7);
+  --primary-color-light6: rgba(0, 98, 217, 0.6);
+  --primary-color-light5: rgba(0, 98, 217, 0.5);
+  --primary-color-light4: rgba(0, 98, 217, 0.4);
+  --primary-color-light3: rgba(0, 98, 217, 0.3);
+  --primary-color-light2: rgba(0, 98, 217, 0.2);
+  --primary-color-light1: rgba(0, 98, 217, 0.1);
+  --primary-color-disabled: rgb(165, 166, 167);
+  --primary-color-light-checked: #2b8ffe;
+  --primary-color-light-uncheck: #f9fcff;
+  --primary-color-light-title: #eaf4ff;
+  --primary-color-selected: #f4f9ff;
+  --primary-color-descript: #f4f9ff;
+  --primary-color-gradient: linear-gradient(270deg, rgba(255, 255, 255, 0) 0%, #2b8dfe2f 100%);
+  --dialog-head-ll-color: linear-gradient(78.89deg, rgba(0, 121, 254, 1), rgba(0, 74, 179, 1));
+  --custom-page-num-circle: rgba(234, 244, 255, 1);
+  --size-name-color: linear-gradient(to bottom, #fff, #ddeefd, #7abaf5);
+  --size-name-color-webkit: -webkit-linear-gradient(bottom, #fff, #ddeefd, #7abaf5);
+  --login-body-bg: rgba(0, 54, 136, 0.3);
+  --login-body-border: #0187d4;
+  --login-el-input-bg: rgba(1, 35, 87, 0.3);
+  --login-el-input-border: #0187d4;
+  --login-el-input-color: #ffffff;
+  --login-el-input-color-pl: #e2e2e2;
+  --primary-color1: #f4f9ff;
+  --primary-el-table-hightlight-color: #e2f0ff;
+  /*表格鼠标悬浮高亮颜色*/
+  --primary-el-table-hightlight-color1: #c4dffc;
+  /*添加数据后表格高亮颜色*/
+  --primary-el-table-hightlight-color2: #a1cdfc;
+  /*添加数据后表格高亮颜色*/
+  --primary-el-table-hightlight-color3: #52a5fd;
+  /*添加数据后表格高亮颜色*/
+  --primary-dropdown-bg: #6ea4eb;
+  --primary-dropdown-color: #3381e1;
+  --primary-menu-icon-color: #aad2ff;
+  /* 拓扑负载均衡背景底色 */
+  --topo-proxyMux-background-color:rgba(0,98,217,0.05);
+  /* 拓扑负载均衡描边 */
+  --topo-proxyMux-border-color:rgba(0,98,217,0.2);
+  /* 拓扑背景层级底色 */
+  --topo-level-background-color:rgba(248,249,255,1);
+  /* 拓扑背景层级描边 */
+  --topo-level-border-color:rgba(209,226,254,1);
+  /* 目标平台颜色 */
+  --primary-color2:#EAF4FF;
+  --primary-color3:#AAD2FF;
+  /* 故障分类颜色 */
+  --faultcolor:#65adE8;
+  --faultcolor2:#f2f8ff;
+}
+
+::-moz-selection {
+  background-color: var(--primary-color-light1);
+}
+
+::selection {
+  background-color: var(--primary-color-light1);
+}

@@ -1,0 +1,310 @@
+{
+  "id": "4948887",
+  "name": "support-again",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "697366",
+      "name": "粗细线条",
+      "font_class": "cuxixiantiao",
+      "unicode": "e61f",
+      "unicode_decimal": 58911
+    },
+    {
+      "icon_id": "3293504",
+      "name": "粗细线条",
+      "font_class": "cuxixiantiao1",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "5604593",
+      "name": "定位",
+      "font_class": "dingwei",
+      "unicode": "e93f",
+      "unicode_decimal": 59711
+    },
+    {
+      "icon_id": "13191371",
+      "name": "定位",
+      "font_class": "dingwei1",
+      "unicode": "e627",
+      "unicode_decimal": 58919
+    },
+    {
+      "icon_id": "24858224",
+      "name": "logo",
+      "font_class": "logo",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "25550602",
+      "name": "光圈",
+      "font_class": "guangquan",
+      "unicode": "e62c",
+      "unicode_decimal": 58924
+    },
+    {
+      "icon_id": "26215884",
+      "name": "定位",
+      "font_class": "dingwei2",
+      "unicode": "e756",
+      "unicode_decimal": 59222
+    },
+    {
+      "icon_id": "33992721",
+      "name": "定位",
+      "font_class": "dingwei3",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "34433937",
+      "name": "科技光点",
+      "font_class": "kejiguangdian",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "3230853",
+      "name": "实线",
+      "font_class": "shixian",
+      "unicode": "e749",
+      "unicode_decimal": 59209
+    },
+    {
+      "icon_id": "3230924",
+      "name": "虚线",
+      "font_class": "xuxian",
+      "unicode": "e74b",
+      "unicode_decimal": 59211
+    },
+    {
+      "icon_id": "10186706",
+      "name": "实线",
+      "font_class": "shixian1",
+      "unicode": "e641",
+      "unicode_decimal": 58945
+    },
+    {
+      "icon_id": "10186966",
+      "name": "实线",
+      "font_class": "shixian2",
+      "unicode": "e645",
+      "unicode_decimal": 58949
+    },
+    {
+      "icon_id": "10691135",
+      "name": "虚线",
+      "font_class": "xuxian1",
+      "unicode": "e64a",
+      "unicode_decimal": 58954
+    },
+    {
+      "icon_id": "11734604",
+      "name": "实线",
+      "font_class": "shixian3",
+      "unicode": "e69b",
+      "unicode_decimal": 59035
+    },
+    {
+      "icon_id": "13332392",
+      "name": "实线",
+      "font_class": "shixian4",
+      "unicode": "e63d",
+      "unicode_decimal": 58941
+    },
+    {
+      "icon_id": "32845220",
+      "name": "虚线",
+      "font_class": "xuxian2",
+      "unicode": "e664",
+      "unicode_decimal": 58980
+    },
+    {
+      "icon_id": "35070259",
+      "name": "虚线",
+      "font_class": "xuxian3",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "37142437",
+      "name": "虚线-copy",
+      "font_class": "xuxian4",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "42709790",
+      "name": "实线",
+      "font_class": "shixian5",
+      "unicode": "e857",
+      "unicode_decimal": 59479
+    },
+    {
+      "icon_id": "42832720",
+      "name": "82-实线-copy-copy-copy",
+      "font_class": "a-82-shixian-copy-copy",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "43138917",
+      "name": "虚线",
+      "font_class": "xuxian5",
+      "unicode": "e74c",
+      "unicode_decimal": 59212
+    },
+    {
+      "icon_id": "383598",
+      "name": "地球仪",
+      "font_class": "diqiuyi",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "1159875",
+      "name": "控制",
+      "font_class": "kongzhi",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
+    },
+    {
+      "icon_id": "1164945",
+      "name": "地球",
+      "font_class": "diqiu",
+      "unicode": "e62e",
+      "unicode_decimal": 58926
+    },
+    {
+      "icon_id": "2045811",
+      "name": "车道控制机机",
+      "font_class": "chedaokongzhijiji",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "2773232",
+      "name": "四角信息",
+      "font_class": "sijiaoxinxi",
+      "unicode": "e616",
+      "unicode_decimal": 58902
+    },
+    {
+      "icon_id": "3929114",
+      "name": "四角信息",
+      "font_class": "sijiaoxinxi1",
+      "unicode": "e624",
+      "unicode_decimal": 58916
+    },
+    {
+      "icon_id": "4799931",
+      "name": "地球",
+      "font_class": "diqiu1",
+      "unicode": "e79c",
+      "unicode_decimal": 59292
+    },
+    {
+      "icon_id": "5388029",
+      "name": "地图_地球_o",
+      "font_class": "ditu_diqiu_o",
+      "unicode": "ebbb",
+      "unicode_decimal": 60347
+    },
+    {
+      "icon_id": "9220211",
+      "name": "icon_控制",
+      "font_class": "icon_kongzhi",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "12630452",
+      "name": "29四角信息",
+      "font_class": "sijiaoxinxi2",
+      "unicode": "e614",
+      "unicode_decimal": 58900
+    },
+    {
+      "icon_id": "12707427",
+      "name": "家居控制-窗帘",
+      "font_class": "jiajukongzhi-chuanglian",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "12975220",
+      "name": "控制",
+      "font_class": "kongzhi1",
+      "unicode": "e64f",
+      "unicode_decimal": 58959
+    },
+    {
+      "icon_id": "14236468",
+      "name": "地球_earth",
+      "font_class": "diqiu_earth",
+      "unicode": "e61d",
+      "unicode_decimal": 58909
+    },
+    {
+      "icon_id": "14236470",
+      "name": "地球_箭头_earth_arrow",
+      "font_class": "diqiu_jiantou_earth_arrow",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
+      "icon_id": "16372269",
+      "name": "控制",
+      "font_class": "kongzhi2",
+      "unicode": "e653",
+      "unicode_decimal": 58963
+    },
+    {
+      "icon_id": "20531542",
+      "name": "地球",
+      "font_class": "31kejichuangxin-diqiu",
+      "unicode": "e632",
+      "unicode_decimal": 58930
+    },
+    {
+      "icon_id": "21053755",
+      "name": "控制器",
+      "font_class": "kongzhiqi",
+      "unicode": "e67e",
+      "unicode_decimal": 59006
+    },
+    {
+      "icon_id": "24934207",
+      "name": "地球",
+      "font_class": "thinline107-12",
+      "unicode": "e8cc",
+      "unicode_decimal": 59596
+    },
+    {
+      "icon_id": "36191610",
+      "name": "四角方框",
+      "font_class": "sijiaofangkuang",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "38633033",
+      "name": "四角信息",
+      "font_class": "sijiaoxinxi3",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "42194603",
+      "name": "layout-top-2-line",
+      "font_class": "layout-top-2-line",
+      "unicode": "e76a",
+      "unicode_decimal": 59242
+    }
+  ]
+}

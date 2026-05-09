@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="37.357" height="30.209" viewBox="0 0 37.357 30.209">
+  <defs>
+    <linearGradient id="linear-gradient" x1="1" y1="0.5" x2="0" y2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc"/>
+      <stop offset="1" stop-color="#037f7e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="0" x2="1" xlink:href="#linear-gradient"/>
+  </defs>
+  <g id="可用通道数" transform="translate(-1829.452 -184.521)">
+    <g id="组_167006" data-name="组 167006" transform="translate(1856.375 184.916)">
+      <path id="路径_87700" data-name="路径 87700" d="M1019.862-604.781v4.181" transform="translate(-1010.428 616.897)" fill="none" stroke="#05fdfc" stroke-width="2"/>
+      <path id="路径_87701" data-name="路径 87701" d="M1020.239-611.481l6.864,5.5-6.864,6.32" transform="translate(-1017.857 620.257)" stroke="#05fdfc" stroke-width="1" opacity="0.45" fill="url(#linear-gradient)"/>
+      <path id="路径_87702" data-name="路径 87702" d="M1029.082-629.084l4.837,3.761v21.667l-4.837,4" transform="translate(-1029.082 629.084)" stroke="#05fdfc" stroke-width="1" opacity="0.1" fill="url(#linear-gradient)"/>
+    </g>
+    <g id="组_167007" data-name="组 167007" transform="translate(1830.452 184.916)">
+      <path id="路径_87700-2" data-name="路径 87700" d="M1019.862-604.781v4.181" transform="translate(-1019.862 616.897)" fill="none" stroke="#05fdfc" stroke-width="2"/>
+      <path id="路径_87701-2" data-name="路径 87701" d="M1027.1-611.481l-6.864,5.5,6.864,6.32" transform="translate(-1020.051 620.257)" stroke="#05fdfc" stroke-width="1" opacity="0.45" fill="url(#linear-gradient-3)"/>
+      <path id="路径_87702-2" data-name="路径 87702" d="M1033.919-629.084l-4.837,3.761v21.667l4.837,4" transform="translate(-1024.485 629.084)" stroke="#05fdfc" stroke-width="1" opacity="0.1" fill="url(#linear-gradient-3)"/>
+    </g>
+    <g id="通道管理" transform="translate(1660.334 37.463)">
+      <path id="路径_87707" data-name="路径 87707" d="M184.783,161.574v-7.408a.577.577,0,0,0-.532-.566.566.566,0,0,0-.566.566v7.419a2.828,2.828,0,0,0,0,5.519v1.764a.566.566,0,0,0,1.131,0v-1.7a2.828,2.828,0,0,0,0-5.553Zm0,4.3a1.821,1.821,0,0,1-.543.09,1.493,1.493,0,0,1-.6-.113,1.7,1.7,0,0,1,0-3.178,1.493,1.493,0,0,1,.6-.113,1.821,1.821,0,0,1,.543.09,1.7,1.7,0,0,1,0,3.223Zm9.048-4.3v-7.408a.577.577,0,0,0-.532-.566.566.566,0,0,0-.566.566v7.419a2.828,2.828,0,0,0,0,5.519v1.764a.566.566,0,0,0,1.131,0v-1.7a2.828,2.828,0,0,0,0-5.553Zm0,4.3a1.821,1.821,0,0,1-.543.09,1.493,1.493,0,0,1-.6-.113,1.7,1.7,0,0,1,0-3.178,1.493,1.493,0,0,1,.6-.113,1.821,1.821,0,0,1,.543.09,1.7,1.7,0,0,1,0,3.223Z" transform="translate(0)" fill="#43dbff"/>
+      <path id="路径_87708" data-name="路径 87708" d="M387.234,155.919v-1.753a.566.566,0,0,0-.532-.566.577.577,0,0,0-.566.566v1.753a2.828,2.828,0,0,0,0,5.542v7.408a.566.566,0,0,0,1.131,0v-7.352a2.828,2.828,0,0,0,0-5.542Zm0,4.456a1.617,1.617,0,0,1-1.131,0,1.8,1.8,0,0,1-1.029-2.262,1.719,1.719,0,0,1,1.029-1.131,1.617,1.617,0,0,1,1.131,0,1.8,1.8,0,0,1,1.029,2.262,1.719,1.719,0,0,1-1.029,1.142Z" transform="translate(-197.926)" fill="#43dbff"/>
+    </g>
+  </g>
+</svg>

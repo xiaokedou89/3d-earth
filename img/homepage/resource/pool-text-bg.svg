@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="205.883" height="19.415" viewBox="0 0 205.883 19.415">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.5" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc" stop-opacity="0"/>
+      <stop offset="1" stop-color="#05fdfc"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" y1="0.5" x2="1" y2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#036565" stop-opacity="0.49"/>
+      <stop offset="0.515" stop-color="#00fffe"/>
+      <stop offset="1" stop-color="#036565" stop-opacity="0.49"/>
+    </linearGradient>
+  </defs>
+  <g id="匿名采购资源-底图" transform="translate(-203.097 -260.892)">
+    <rect id="矩形_149124" data-name="矩形 149124" width="205.72" height="19.312" transform="translate(203.097 260.892)" opacity="0.12" fill="url(#linear-gradient)"/>
+    <path id="路径_88318" data-name="路径 88318" d="M-1564.79,11655.962h-205.883v-.839h205.883Z" transform="translate(1973.769 -11375.655)" fill="url(#linear-gradient-2)"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="33.835" height="32.233" viewBox="0 0 33.835 32.233">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.5" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#0b3751"/>
+      <stop offset="1" stop-color="#0d4753" stop-opacity="0.169"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="0.5" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#05fdfc"/>
+      <stop offset="1" stop-color="#02a2ff"/>
+    </linearGradient>
+  </defs>
+  <g id="风险评估" transform="translate(-1467.845 -665.271)">
+    <path id="路径_87713" data-name="路径 87713" d="M1466.152,456.2l-14.015,16.713,14.015,15.519h19.82V456.2Z" transform="translate(15.708 209.075)" fill="url(#linear-gradient)"/>
+    <path id="路径_87743" data-name="路径 87743" d="M167.84,89.067a7.113,7.113,0,0,1-4.992-2.018.874.874,0,0,0-1.152-.068A9.013,9.013,0,0,1,156.55,89a.876.876,0,0,0-.852.878V95.4c0,1.118-.064,3.6,6.093,7.108a.88.88,0,0,0,.83.022c6.064-3.05,6.093-5.668,6.093-6.673V89.945A.878.878,0,0,0,167.84,89.067Zm-2.834,6.025-3.025,3.151a.8.8,0,1,1-1.153-1.107l1.726-1.8h-2.572a.8.8,0,0,1-.564-1.366l2.826-2.817a.8.8,0,1,1,1.129,1.133l-1.455,1.451h2.512a.8.8,0,0,1,.577,1.353Z" transform="translate(1327.39 586.742)" fill="url(#linear-gradient-2)"/>
+  </g>
+</svg>
