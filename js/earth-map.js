@@ -1718,7 +1718,7 @@ class ThreeMap {
 // 最后导出的组件
 const EarthMap = {
   template: `
-    <div class="earth-map">
+    <div id="my-earth-map" class="earth-map">
       <div ref="mapRef" id="earth-map"></div>
       <div ref="tooltipRef" class="earth-tooltip"></div>
     </div>

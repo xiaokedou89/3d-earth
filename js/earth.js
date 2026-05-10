@@ -49,12 +49,14 @@ class Basic {
     this.controls.dampingFactor = 0.05;
     // 是否可以缩放
     this.controls.enableZoom = true;
-    // 设置相机距离原点的最远距离
+    // 设置相机距离原点的最近距离
     this.controls.minDistance = 100;
     // 设置相机距离原点的最远距离
     this.controls.maxDistance = 300;
     // 是否开启右键拖拽
     this.controls.enablePan = false;
+    console.log('看一下初始的控制器')
+    console.log(this.controls)
   }
 }
 
@@ -597,6 +599,25 @@ function flyArc(radius, lon1, lat1, lon2, lat2, options, lineType, lineStatus) {
   const arcline = arcXOY(radius, startEndQua.startPoint, startEndQua.endPoint, options, lineType, lineStatus);
   arcline.quaternion.multiply(startEndQua.quaternion);
   return arcline;
+}
+
+// 经度longitude
+// 纬度latitude
+function getPointAlongRay(longitude, latitude, distance = 50, earthRadius = 50) {
+    // 1. 首先利用你代码中已有的 lon2xyz 方法，获取目标点的 3D 坐标
+    // 注意：lon2xyz 返回的坐标模长通常是 earthRadius
+    const targetPoint = lon2xyz(earthRadius, longitude, latitude);
+    
+    // 2. 计算从原点指向目标点的单位向量 (方向)
+    // targetPoint 向量本身就是从原点指向目标的，归一化即可
+    const direction = targetPoint.clone().normalize();
+    
+    // 3. 计算新点的坐标
+    // 逻辑：目标点坐标 - (方向向量 * 距离)
+    // 这样得到的点就在射线上，且距离目标点正好是 `distance`
+    const resultPoint = targetPoint.sub(direction.multiplyScalar(distance));
+    
+    return resultPoint;
 }
 
 // 声明地球类
@@ -1183,7 +1204,7 @@ class Earth {
 
 // 导出的地球组件
 const MyEarth = {
-  template: `<div class="my-earth">
+  template: `<div id="my-earth" class="my-earth">
     <div id="loading">
       <div class="sk-chase">
         <div class="sk-chase-dot"></div>
@@ -1507,6 +1528,97 @@ const MyEarth = {
         console.log(px);
         console.log(py);
       }
+    },
+    outFlyToLocation(longitude, latitude, duration = 2) {
+
+        if (!this.camera || !this.controls || !this.earth) return;
+        let earthDom = document.getElementById('my-earth');
+        let earthMapDom = document.getElementById('my-earth-map')
+        this.controls.minDistance = 50;
+        const R = this.earth.options.earth.radius;
+        const targetPoint = lon2xyz(R, longitude, latitude); // 1.05倍半径高度
+
+        const positionPoint = getPointAlongRay(longitude, latitude, -10, R);
+
+        this.earth.isRotation = false; // 动画期间停止自转
+        const that = this;
+        earthDom.style.zIndex = -1;
+        earthMapDom.style.zIndex = 0;
+        gsap.to(earthDom, {
+          opacity: 0,
+          duration: duration * 3,
+          ease: "power2.out",
+        });
+        gsap.to(earthMapDom, {
+          opacity: 1,
+          delay: duration,
+          duration: duration * 3,
+          ease: "power2.out",
+        });
+        gsap.to(this.camera.position, {
+            x: positionPoint.x,
+            y: positionPoint.y,
+            z: positionPoint.z,
+            duration: duration,
+            ease: "power2.out",
+            onStart: () => {
+                // 开始动画前，确保相机不会自动旋转干扰
+                that.controls.autoRotate = false;
+            },
+            onUpdate: () => {
+                // 实时更新控制器的焦点，让相机看向目标点
+                that.controls.target.copy(targetPoint);
+                that.controls.update();
+            },
+            onComplete(){
+
+            }
+            // onComplete: () => {
+            //     // 动画结束，恢复控制器设置
+            //     // 这里可以设置为几秒后恢复自转，或者保持静止
+            //     setTimeout(() => {
+            //         that.earth.isRotation = wasRotating;
+            //     }, 3000); // 3秒后恢复自转
+            // }
+        });
+    },
+    outFlyToOrigin(duration = 2){
+      const that = this;
+      let earthDom = document.getElementById('my-earth');
+      let earthMapDom = document.getElementById('my-earth-map');
+      earthDom.style.zIndex = 0;
+      earthMapDom.style.zIndex = -1;
+      gsap.to(earthDom, {
+        opacity: 1,
+        delay: duration,
+        duration: duration * 3,
+        ease: "power2.out",
+      });
+      gsap.to(earthMapDom, {
+        opacity: 0,
+        duration: duration * 3,
+        ease: "power2.out",
+      });
+      // 0, 30, -200
+      gsap.to(this.camera.position, {
+        x: 0,
+        y: 30,
+        z: -200,
+        delay: duration * 4,
+        duration: 2,
+        ease: "power2.out",
+        onUpdate: () => {
+          // 实时更新控制器的焦点，让相机看向目标点
+          that.controls.target.copy(new THREE.Vector3(0, 0, 0));
+          that.controls.update();
+        },
+        onComplete(){
+          console.log(that)
+          that.controls.autoRotate = true;
+          that.earth.isRotation = true;
+          that.controls.minDistance = 100
+        }
+      })
     }
   }
 };

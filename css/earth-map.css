@@ -6,6 +6,7 @@
   overflow: hidden;
   background: transparent;
   z-index: -1;
+  opacity: 0;
 }
 #earth-map {
   width: 100%;

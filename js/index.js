@@ -1085,7 +1085,11 @@ $app = new Vue({
     },
 		test(e) {
       // this.$refs.earth.clearAllDatas();
-      this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
+      // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
+      this.$refs.earth.outFlyToLocation(116.41995, 40.18994);
+    },
+    ttt(){
+      this.$refs.earth.outFlyToOrigin();
     },
     render() {
       this.$refs.earth.renderDatas([
