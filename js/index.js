@@ -1007,7 +1007,8 @@ $app = new Vue({
 		}
 	},
 	components: {
-    'my-earth': MyEarth
+    'my-earth': MyEarth,
+    'earth-map': EarthMap
   },
 	created() {
     $app = this;
@@ -1083,7 +1084,8 @@ $app = new Vue({
       this.getSupport(true); // 筛选支持态势图表数据
     },
 		test(e) {
-      this.$refs.earth.clearAllDatas();
+      // this.$refs.earth.clearAllDatas();
+      this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
     },
     render() {
       this.$refs.earth.renderDatas([
