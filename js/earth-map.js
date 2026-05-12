@@ -1,4 +1,3 @@
-console.log(THREE)
 // Vertex Shader: 传递 UV 坐标
 const vs = `
 varying vec2 vUv;
@@ -1564,15 +1563,12 @@ class ThreeMap {
   }
   // 添加飞线图层
   addLinkLayer(options) {
-    console.log('调用了添加飞线图层')
     const config = this.options.config;
     const group = drawFlight.call(this, options, config);
-    console.log(group)
     this.seriesGroup.add(group);
   }
   // 设置地图配置项
   setOption(options, refresh){
-    console.log('调用map.setOption')
     this.mapKey = uuid();
     this.clearMap();
     this.isClear = false;

@@ -1014,7 +1014,6 @@ $app = new Vue({
     $app = this;
   },
 	mounted() {
-		console.log(ChannelDict)
     // 调用进入页面动画
     // this.enterAnimate();
     this.init();
@@ -1084,12 +1083,34 @@ $app = new Vue({
       this.getSupport(true); // 筛选支持态势图表数据
     },
 		test(e) {
-      // this.$refs.earth.clearAllDatas();
+      this.$refs.earth.clearAllDatas();
       // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
-      this.$refs.earth.outFlyToLocation(116.41995, 40.18994);
+      // this.$refs.earth.outFlyToLocation(116.41995, 40.18994);
     },
     ttt(){
-      this.$refs.earth.outFlyToOrigin();
+      // this.$refs.earth.outFlyToOrigin();
+      this.$refs.earth.renderDatas([
+        {
+      "name": "新北市",
+      "E": 121.461387,
+      "N": 25.018081
+    },
+    {
+      "name": "中国香港",
+      "E": 114.184921,
+      "N": 22.350617
+    },
+    {
+      "name": "台北市",
+      "E": 121.564438,
+      "N": 25.037555
+    },
+    {
+      "name": "深圳市",
+      "E": 114.014495,
+      "N": 22.542702
+    },
+      ]);
     },
     render() {
       this.$refs.earth.renderDatas([
@@ -1446,13 +1467,11 @@ $app = new Vue({
         setTimeout(() => {
           leftItem.classList.remove('show');
           tl.play();
-          console.log('时间线play')
         }, 3000);
       }});
       tl.to('.left-item', { skewX: 50, height: '4%', opacity: 0, duration: 1, delay: 1});
       for (let item of $app.resourceStatis.center){
         let indexItemDom = document.querySelector(`.center-item-${item.index}`);
-        console.log(item.index);
         tl.to(`.center-item-${item.index}`, { rotateY: '0deg', opacity: 1, duration: 1, onComplete(){
           indexItemDom.classList.add('show');
           tl.pause();
@@ -1828,7 +1847,6 @@ $app = new Vue({
 			$app.$refs.earth.init();
 			$app.enterAnimate();
       setTimeout(() => {
-        console.log('执行启动旋转')
         $app.changeRotation();
       }, 8000);
 		},
@@ -1923,8 +1941,6 @@ $app = new Vue({
       };
       option.legend.data.push('执行成功率', '任务数量');
 			$app.setCharts('support', 'support-chart', option);
-      ////////
-      console.log($app.charts.support.chart.getOption());
 		},
 		// 处理支撑态势数据错误或为空
     deelSupportError(option) {
