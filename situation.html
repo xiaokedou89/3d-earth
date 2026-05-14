@@ -22,9 +22,17 @@
 		<div id="app">
 			<!-- 全屏背景平铺(1) -->
       <div class="earth-container">
-        <!-- <my-earth ref="earth" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth> -->
-        <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
-        <earth-map ref="earthMap"></earth-map>
+        <div class="cloud">
+          <!-- https://pngtree.com/ -->
+          <img class="normal1" src="./assets/earth/cloud1.png" />
+          <img class="normal2" src="./assets/earth/cloud2.png" />
+          <img class="normal3" src="./assets/earth/cloud3.png" />
+          <img class="normal4" src="./assets/earth/cloud4.png" />
+          <img class="normal5" src="./assets/earth/cloud5.png" />
+        </div>
+        <my-earth ref="earth" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
+        <!-- <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth> -->
+        <!-- <earth-map ref="earthMap"></earth-map> -->
       </div>
 			<!-- 顶部占位(3) -->
 			<div class="position-top">
@@ -45,14 +53,14 @@
           <!-- 右侧按钮 -->
           <div class="position-top-actions">
             <!-- 进入工作台 -->
-            <div class="position-top-action enter" @click="linkToIndex">
+            <div class="position-top-action enter" @click="test">
               <img class="position-top-action-bg" src="./img/homepage/main/enter-border.svg" />
               <div class="position-top-action-inner">
                 <img class="position-top-action-txt" src="./img/homepage/main/enter.svg" />
               </div>
             </div>
             <!-- 退出 -->
-            <div class="position-top-action out" @click="quit">
+            <div class="position-top-action out" @click="ttt">
               <img class="position-top-action-bg" src="./img/homepage/main/out-border.svg" />
               <div class="position-top-action-inner">
                 <img class="position-top-action-txt" src="./img/homepage/main/out.svg" />
@@ -153,7 +161,7 @@
         </div>
       </div>
 			<!-- 地球上方 - 两个角的外部 -->
-      <div class="position-center-top-corner">
+      <div class="position-center-top-corner" style="display: none">
         <!-- 左上角 -->
         <div class="left corner-item">
           <div class="arrow"></div>
@@ -240,7 +248,7 @@
         </div>
       </div>
 			<!-- 地球下方 - 两个角的外部 -->
-      <div class="position-center-bottom-corner">
+      <div class="position-center-bottom-corner" style="display: none">
         <!-- 左下角 -->
         <div class="left corner-item">
           <div class="arrow"></div>
@@ -326,7 +334,7 @@
         </div>
       </div>
 			<!-- 地球下方(3) -->
-      <div class="position-center-bottom" @click="test">
+      <div class="position-center-bottom">
         <!-- 支撑态势标题 -->
         <div class="position-title">
           <img class="position-title-content" src="./img/homepage/support/title.svg" />
@@ -335,7 +343,7 @@
         <div class="support-section" id="support-chart"></div>
       </div>
 			<!-- 左下(3) -->
-      <div class="position-left">
+      <div class="position-left" style="display: none">
 				<div class="position-left-border-top"></div>
         <div class="position-left-border-center"></div>
         <div class="position-left-border-bottom"></div>
@@ -343,7 +351,7 @@
 					<!-- 上方的资源部分 -->
 					<div class="position-common-section left-top-section">
 						<!-- 资源池标题 -->
-						<div class="position-title" @click="ttt">
+						<div class="position-title">
               <img class="position-title-content" src="./img/homepage/resource/title-pool-change.svg" />
             </div>
 						<!-- 资源池 -->
@@ -609,7 +617,7 @@
 				</div>
 			</div>
 			<!-- 右下(3) -->
-			<div class="position-right">
+			<div class="position-right" style="display: none">
 				<div class="position-right-border-top"></div>
         <div class="position-right-border-center"></div>
         <div class="position-right-border-bottom"></div>
@@ -867,6 +875,7 @@
     <script src="./assets/js/three/build/CSS2DRenderer.js"></script>
     <script src="./assets/js/three/build/SMAAShader.js"></script>
     <script src="./assets/js/three/build/SMAAPass.js"></script>
+    <script src="./assets/js/three/build/BufferGeometryUtils.js"></script>
 		<script src="./assets/js/html2canvas.js"></script>
 
     <script src="./assets/js/d3.min.js"></script>

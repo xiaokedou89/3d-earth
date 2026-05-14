@@ -1,3 +1,4 @@
+console.log(THREE)
 // 基类
 class Basic {
   constructor(dom) {
@@ -935,54 +936,7 @@ class Earth {
       })
     );
   }
-  // 创建圆锥体点位 (新增函数)
-createConePoints(dataList) {
-    // 1. 定义圆锥体参数
-    const R = this.options.earth.radius; // 地球半径
-    const coneHeight = R * 0.2; // 圆锥高度 (约为地球半径的 1/5，视觉效果较好)
-    const coneRadius = R * 0.08; // 圆锥底面半径
-
-    // 2. 创建圆锥体几何体
-    // 参数：底面半径、高度、圆周分段数
-    const coneGeometry = new THREE.ConeBufferGeometry(coneRadius, coneHeight, 32);
-    
-    // 3. 创建材质 (使用 MeshBasicMaterial 或 MeshLambertMaterial)
-    // 这里使用了渐变色和透明度，你可以根据 UI 风格修改 color 值
-    const coneMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x00aaff, // 科技蓝，你可以改为 0xffd700 (金色) 或 0x00ff00 (绿色)
-        transparent: true, 
-        opacity: 0.8,
-        // depthWrite: false, // 如果需要穿透地球显示，开启此项；如果希望被地球遮挡，注释掉
-        side: THREE.DoubleSide // 双面显示，确保从任何角度都能看到
-    });
-
-    // 4. 遍历传入的数据数组
-    dataList.forEach(item => {
-        // 4.1 经纬度转球面坐标 (获取圆锥底部中心点)
-        const sphereCoord = lon2xyz(R, item.E, item.N);
-        
-        // 4.2 创建 Mesh
-        const coneMesh = new THREE.Mesh(coneGeometry, coneMaterial);
-        
-        // 4.3 设置位置
-        // 将圆锥底部中心点移动到球面坐标上
-        // 因为 ConeGeometry 默认顶点在原点，底面中心在 Y 轴负方向，所以我们需要向上平移半个高度
-        coneMesh.position.set(sphereCoord.x, sphereCoord.y, sphereCoord.z);
-        
-        // 4.4 关键：旋转对齐
-        // 获取该点的法线向量（即从地球中心指向该点的方向）
-        const coordVec3 = new THREE.Vector3(sphereCoord.x, sphereCoord.y, sphereCoord.z).normalize();
-        // ConeGeometry 默认指向 Y 轴，我们需要将其指向法线方向
-        coneMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), coordVec3);
-        
-        // 4.5 (可选) 添加数据标识，方便后续交互
-        coneMesh.userData.selectable = true;
-        coneMesh.userData.name = item.name;
-
-        // 4.6 添加到地球组
-        this.earthGroup.add(coneMesh);
-    });
-}
+  
   async createSpriteLabel() {
     await Promise.all(
       this.options.data.map(async (item) => {
@@ -1527,7 +1481,6 @@ const MyEarth = {
       // this.earth.createSpriteLabelAsync();
       // // this.createAnimateCircle() // 创建环绕卫星
       // this.earth.createFlyLine(); // 创建飞线
-      this.earth.createConePoints(datas);
     },
     // 尝试为地球添加鼠标悬浮的射线器侦测事件
     handleMousemove(e) {

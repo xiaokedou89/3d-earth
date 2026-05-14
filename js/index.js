@@ -1086,31 +1086,19 @@ $app = new Vue({
       this.$refs.earth.clearAllDatas();
       // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
       // this.$refs.earth.outFlyToLocation(116.41995, 40.18994);
+      this.animateCloud();
     },
     ttt(){
       // this.$refs.earth.outFlyToOrigin();
-      this.$refs.earth.renderDatas([
-        {
-      "name": "新北市",
-      "E": 121.461387,
-      "N": 25.018081
+      this.$refs.earth.scene.add(this.$refs.earth.earth.createCloud())
     },
-    {
-      "name": "中国香港",
-      "E": 114.184921,
-      "N": 22.350617
-    },
-    {
-      "name": "台北市",
-      "E": 121.564438,
-      "N": 25.037555
-    },
-    {
-      "name": "深圳市",
-      "E": 114.014495,
-      "N": 22.542702
-    },
-      ]);
+    // 尝试添加云层动画
+    animateCloud(){
+      gsap.fromTo('.cloud', {
+        right: '-100%', opacity: 0.8
+      }, {
+        right: '100%', opacity: 1, duration: 5, ease: 'power1.out'
+      });
     },
     render() {
       this.$refs.earth.renderDatas([
