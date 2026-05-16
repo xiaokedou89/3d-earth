@@ -1023,20 +1023,29 @@ h1, h2, h3, h4, h5, h6 {
 .position-center-bottom {
 	/* width: calc(48.44% - 0.38rem); */
 	width: calc(48.44% - 0.60rem);
-	padding-top: 0.078125rem;
-	height: 1.27604rem;
+	/* padding-top: 0.078125rem;
+	height: 1.27604rem; */
+	/* aspect-ratio: 790 / 259; */
+	aspect-ratio: 948 / 311;
 	border-radius: 8px;
 	position: absolute;
 	z-index: 3;
 	left: 0;
 	right: 0;
 	margin: 0 auto;
-	background: linear-gradient(to top, rgba(12, 16, 48, .6), rgba(12, 16, 48, .5), rgba(12, 16, 48, .3));
+	/* background: linear-gradient(to top, rgba(12, 16, 48, .6), rgba(12, 16, 48, .5), rgba(12, 16, 48, .3)); */
 	/* 动画完成后的bottom */
 	/* bottom: 0.0833rem; */
 	/* 页面初始值 */
 	bottom: -1.27604rem;
 	opacity: 0;
+}
+.position-center-bottom > img {
+  width: 100%;
+  height: auto;
+  /* 禁止拖拽 */
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .position-center-bottom > .support-section {
 	/* height: calc(100% - 0.21875rem); */

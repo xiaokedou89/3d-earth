@@ -1696,7 +1696,7 @@ $app = new Vue({
       // this.getEarthDatasTest();
       this.getEarthDatasReal();
       // (地球下方)获取支撑态势图表数据
-      this.getSupport();
+      // this.getSupport();
       // 获取顶部三个数
       this.getTopThree();
       // 获取地球左侧数据 - 资源池
