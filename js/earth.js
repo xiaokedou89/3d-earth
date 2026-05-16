@@ -29,6 +29,7 @@ class Basic {
     // @important
     // 设置相机位置 - 这里可以调整初始地球显示的大小
     this.camera.position.set(0, 30, -200);
+    // this.camera.position.set(0, 30, 200);
     this.renderer = new THREE.WebGLRenderer({
       alpha: true, // 透明
       antialias: true, // 抗锯齿
@@ -234,6 +235,32 @@ function lon2xyz(R, longitude, latitude) {
   const z = R * Math.cos(lat) * Math.sin(lon);
   // 返回球面坐标
   return new THREE.Vector3(x, y, z);
+}
+// 抵消地球自转造成的角度影响
+function rotateLon2xyz(R, longitude, latitude, currentRotationY = 0){
+  let lon = (longitude * Math.PI) / 180; // 转弧度值
+  const lat = (latitude * Math.PI) / 180; // 转弧度值
+
+  lon = -lon;
+  const x = R * Math.cos(lat) * Math.cos(lon);
+  const y = R * Math.sin(lat);
+  const z = R * Math.cos(lat) * Math.sin(lon);
+  const vector = new THREE.Vector3(x, y, z);
+  if (currentRotationY !== 0) {
+    // 绕 Y 轴旋转矩阵
+    // 反向角度
+    // const cosRY = Math.cos(-currentRotationY); 
+    // const sinRY = Math.sin(-currentRotationY);
+    const cosRY = Math.cos(currentRotationY); 
+    const sinRY = Math.sin(currentRotationY);
+    // 应用旋转矩阵到向量
+    const xNew = vector.x * cosRY + vector.z * sinRY;
+    const zNew = -vector.x * sinRY + vector.z * cosRY;
+
+    vector.x = xNew;
+    vector.z = zNew;
+  }
+  return vector;
 }
 // 创建动态的线
 function createAnimateLine(option) {
@@ -602,10 +629,10 @@ function flyArc(radius, lon1, lat1, lon2, lat2, options, lineType, lineStatus) {
 
 // 经度longitude
 // 纬度latitude
-function getPointAlongRay(longitude, latitude, distance = 50, earthRadius = 50) {
+function getPointAlongRay(longitude, latitude, distance = 50, earthRadius = 50, turnY = 0) {
     // 1. 首先利用你代码中已有的 lon2xyz 方法，获取目标点的 3D 坐标
     // 注意：lon2xyz 返回的坐标模长通常是 earthRadius
-    const targetPoint = lon2xyz(earthRadius, longitude, latitude);
+    const targetPoint = rotateLon2xyz(earthRadius, longitude, latitude, turnY);
     
     // 2. 计算从原点指向目标点的单位向量 (方向)
     // targetPoint 向量本身就是从原点指向目标的，归一化即可
@@ -936,7 +963,98 @@ class Earth {
       })
     );
   }
-  
+  // 创建资源柱状点
+  /**
+   * 
+   * @param { name, N, E, type, radiusRate, heightRate } datas 
+   */
+  createSourcePoint(datas){
+    this.markupPoint.clear();
+    datas.forEach(item => {
+      const radius = this.options.earth.radius;
+      const lon = item.E; //经度
+      const lat = item.N; //纬度
+      // @important - 底座点位周边的材质(蓝色光圈)
+      this.punctuationMaterial = new THREE.MeshBasicMaterial({
+        // color: this.options.punctuation.circleColor,
+        // map: this.options.textures.label,
+        map: this.options.textures.circle,
+        transparent: true, //使用背景透明的png贴图，注意开启透明计算
+        depthWrite: false //禁止写入深度缓冲区数据
+      });
+
+      const mesh = createPointMesh({ radius, lon, lat, material: this.punctuationMaterial }); //光柱底座矩形平面
+      mesh.userData['selectable'] = true;
+      mesh.userData['positionName'] = item.name;
+      this.markupPoint.add(mesh);
+      const LightPillar = createSourceLightPillar({
+        radius: this.options.earth.radius,
+        lon,
+        lat,
+        index: 0,
+        textures: this.options.textures,
+        punctuation: this.options.punctuation,
+        sourceLightPillarColors: this.options.sourceLightPillarColors
+      }, {
+        heightRate: item.heightRate,
+        radiusRate: item.radiusRate,
+        type: item.type
+      }); //光柱
+      LightPillar.userData['isLightPillar'] = true;
+      LightPillar.userData['selectable'] = true;
+      LightPillar.userData['positionName'] = item.name;
+      this.markupPoint.add(LightPillar);
+      const WaveMesh = createWaveMesh({ radius, lon, lat, textures: this.options.textures }); //波动光圈
+      WaveMesh.userData['isWaveMesh'] = true;
+      WaveMesh.userData['selectable'] = true;
+      WaveMesh.userData['positionName'] = item.name;
+      this.markupPoint.add(WaveMesh);
+      this.waveMeshArr.push(WaveMesh);
+      this.markupPoint.userData['isMarkupPoint'] = true;
+      this.earthGroup.add(this.markupPoint);
+    })
+  }
+  // 为资源视图创建数据标签
+  createSourceSpriteLabel(datas){
+    let tempGroup = new THREE.Group();
+    datas.forEach(item => {
+      const p = lon2xyz(this.options.earth.radius * 1.001, item.E, item.N);
+      const div = `<h6 class="fire-label">${item.name}</h6>`;
+      const shareContent = document.getElementById('html2canvas');
+      shareContent.innerHTML = div;
+      const opts = {
+        backgroundColor: null, // 背景透明
+        scale: 6,
+        dpi: window.devicePixelRatio,
+        // @important 这个函数可以过滤遍历标签label的途径dom从而优化遍历路径和生成标签label的时间，大大减少加载速度
+        ignoreElements(e) {
+          if ((e.tagName !== 'META' && e.tagName !== 'DIV' && e.tagName !== 'STYLE') || e.contains(shareContent) || shareContent.contains(e) || e.tagName === 'HEAD' || e.tagName === 'LINK') {
+            return false;
+          }
+          return true;
+        }
+      };
+      html2canvas(document.getElementById('html2canvas'), opts).then((canvas) => {
+        const dataURL = canvas.toDataURL('image/png');
+        const map = new THREE.TextureLoader().load(dataURL);
+        const material = new THREE.SpriteMaterial({
+          map: map,
+          transparent: true
+        });
+        const sprite = new THREE.Sprite(material);
+        const len = 5 + (item.name.length - 2) * 2;
+        sprite.scale.set(len, 3, 1);
+        sprite.position.set(p.x * 1.1, p.y * 1.1, p.z * 1.1);
+        sprite.userData['type'] = 'label';
+        sprite.userData['selectable'] = true;
+        sprite.userData['positionName'] = item.name;
+        // this.earth.add(sprite);
+        tempGroup.add(sprite);
+      });
+    });
+    tempGroup.userData['isLabelGroup'] = true;
+    this.earthGroup.add(tempGroup);
+  }
   async createSpriteLabel() {
     await Promise.all(
       this.options.data.map(async (item) => {
@@ -1311,7 +1429,7 @@ const MyEarth = {
       this.resources = new Resources(async () => {
         await this.createEarth();
         this.earth.earthGroup.rotation.y -= 0.3
-        // this.earth.earthGroup.rotation.x -= 0.3
+
         // 获取卫星x轴平面位置
         let satelliteX = this.earth.satelliteModel.position.x;
         const color = 0xffffff;
@@ -1345,6 +1463,8 @@ const MyEarth = {
           this.addEvent(this.dom.firstChild);
         }
         this.render();
+        console.log('看一下初始地球组的y')
+        console.log(this.earth.earthGroup)
       }, '/assets/earth/');
     },
     addComposer() {
@@ -1500,96 +1620,69 @@ const MyEarth = {
         console.log(py);
       }
     },
-    outFlyToLocation(longitude, latitude, duration = 2) {
-
-        if (!this.camera || !this.controls || !this.earth) return;
-        let earthDom = document.getElementById('my-earth');
-        let earthMapDom = document.getElementById('my-earth-map')
-        this.controls.minDistance = 50;
-        const R = this.earth.options.earth.radius;
-        const targetPoint = lon2xyz(R, longitude, latitude); // 1.05倍半径高度
-
-        const positionPoint = getPointAlongRay(longitude, latitude, -10, R);
-
-        this.earth.isRotation = false; // 动画期间停止自转
-        const that = this;
-        earthDom.style.zIndex = -1;
-        earthMapDom.style.zIndex = 0;
-        gsap.to(earthDom, {
-          opacity: 0,
-          duration: duration * 3,
-          ease: "power2.out",
-        });
-        gsap.to(earthMapDom, {
-          opacity: 1,
-          delay: duration,
-          duration: duration * 3,
-          ease: "power2.out",
-        });
-        gsap.to(this.camera.position, {
-            x: positionPoint.x,
-            y: positionPoint.y,
-            z: positionPoint.z,
-            duration: duration,
-            ease: "power2.out",
-            onStart: () => {
-                // 开始动画前，确保相机不会自动旋转干扰
-                that.controls.autoRotate = false;
-            },
-            onUpdate: () => {
-                // 实时更新控制器的焦点，让相机看向目标点
-                that.controls.target.copy(targetPoint);
-                that.controls.update();
-            },
-            onComplete(){
-
-            }
-            // onComplete: () => {
-            //     // 动画结束，恢复控制器设置
-            //     // 这里可以设置为几秒后恢复自转，或者保持静止
-            //     setTimeout(() => {
-            //         that.earth.isRotation = wasRotating;
-            //     }, 3000); // 3秒后恢复自转
-            // }
-        });
+    // ============> 暴露到外部的方法
+    // 外部方法 - 根据传入的经纬度和到该经纬度的距离返回地球上的目标点和相机移动位置点
+    outReturnAnimationVector({N, E}, distance){
+      const R = this.earth.options.earth.radius;
+      // const target = lon2xyz(R, N, E);
+      const turnY = this.earth.earthGroup.rotation.y;
+      const target = rotateLon2xyz(R, N, E, turnY)
+      const position = getPointAlongRay(N, E, -distance, R, turnY);
+      return { target, position };
     },
-    outFlyToOrigin(duration = 2){
+    // 外部方法 - 计算从目前视角拉远到控制器的最远距离点位
+    outReturnMaxDisPoint(){
+      // 将相机的世界坐标位置转换为相对于目标点的向量
+      const currentPos = new THREE.Vector3();
+      currentPos.setFromMatrixPosition(this.camera.matrixWorld);
+      // 控制器的目标中心
+      const target = this.controls.target.clone();
+      // 当前视线方向
+      const dir = currentPos.clone().sub(target).normalize(); 
+      // 当前距离
+      const currentDistance = currentPos.distanceTo(target); 
+      // 目标最大距离
+      const maxDistance = this.controls.maxDistance; 
+      // 防止当前距离已经超过 maxDistance
+      if (currentDistance >= maxDistance) {
+        return;
+      }
+      // 新位置 = 目标点 + (视线方向 * 最大距离)
+      const newPos = dir.clone().multiplyScalar(maxDistance).add(target);
+      return newPos;
+    },
+    // 外部方法 - 渲染资源点位
+    outRenderSourcePoint(datas){
       const that = this;
-      let earthDom = document.getElementById('my-earth');
-      let earthMapDom = document.getElementById('my-earth-map');
-      earthDom.style.zIndex = 0;
-      earthMapDom.style.zIndex = -1;
-      gsap.to(earthDom, {
-        opacity: 1,
-        delay: duration,
-        duration: duration * 3,
-        ease: "power2.out",
-      });
-      gsap.to(earthMapDom, {
-        opacity: 0,
-        duration: duration * 3,
-        ease: "power2.out",
-      });
-      // 0, 30, -200
-      gsap.to(this.camera.position, {
-        x: 0,
-        y: 30,
-        z: -200,
-        delay: duration * 4,
-        duration: 2,
-        ease: "power2.out",
-        onUpdate: () => {
-          // 实时更新控制器的焦点，让相机看向目标点
-          that.controls.target.copy(new THREE.Vector3(0, 0, 0));
-          that.controls.update();
-        },
-        onComplete(){
-          console.log(that)
-          that.controls.autoRotate = true;
-          that.earth.isRotation = true;
-          that.controls.minDistance = 100
+      datas = datas.map(item => {
+        return {
+          ...item,
+          heightRate: that.sourceLightPillarRank[item.rank].h,
+          radiusRate: that.sourceLightPillarRank[item.rank].r
         }
-      })
+      });
+      this.earth.createSourcePoint(datas);
+    },
+    // 外部方法 - 渲染资源标牌
+    outRenderSourceLabel(datas){
+      this.earth.createSourceSpriteLabel(datas);
+    },
+    // 外部方法 - 渲染网络视图
+    async outRenderNetworkView(datas){
+      this.earth.options.data = datas;
+      await this.earth.createMarkupPoint(); // 创建柱状点位
+      // await this.createSpriteLabel() // 创建标签
+      this.earth.createSpriteLabelAsync();
+      // this.createAnimateCircle() // 创建环绕卫星
+      this.earth.createFlyLine(); // 创建飞线
     }
   }
 };
+console.log(Math.atan2(0, 0))
+console.log(Math.atan2(45, 45))
+console.log(Math.atan2(90, 0))
+console.log(Math.atan2(45, -45))
+console.log(Math.atan2(0, -90))
+console.log(Math.atan2(-45, -45))
+console.log(Math.atan2(-90, 0))
+console.log(Math.atan2(-45, 45))

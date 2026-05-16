@@ -63,62 +63,122 @@ h1, h2, h3, h4, h5, h6 {
 }
 /* cloud */
 .earth-container > .cloud {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	z-index: 1;
-	overflow: hidden;
-	background-image: linear-gradient(to right, rgba(1, 8, 38, 0), rgba(1, 8, 38, 1), rgba(1, 8, 38, 0));
-	opacity: 0;
-	right: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  z-index: -2;
+  overflow: hidden;
+  /* background-image: linear-gradient(to right, rgba(1, 8, 38, 0), rgba(1, 8, 38, 1), rgba(1, 8, 38, 0)); */
+  /* opacity: 0;
+  right: 0; */
+  opacity: 0;
 }
-.earth-container > .cloud > img {
-	user-select: none;
+
+.earth-container > .cloud img {
+  user-select: none;
   -webkit-user-drag: none;
 }
-
-.normal1 {
-	aspect-ratio: 1 / 1;
-	position: absolute;
-	right: 0;
-	top: 0;
-	width: 30%;
-	opacity: 0.6;
+.earth-container > .cloud > .cloud-level {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 0;
 }
-.normal2 {
-	aspect-ratio: 1280 / 720;
-	position: absolute;
-	height: 60%;
-	right: 0;
-	top: 0;
+.cloud-level > .cloud-image {
+  position: absolute;
 }
-.normal3 {
-	aspect-ratio: 1920 / 1080;
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	width: 80%;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
+/* 最低层 - level5层 */
+.earth-container>.cloud> .cloud-level.level-5 {
+  z-index: 0;
+  opacity: 0.2;
+  transform: translate3d(0, 0, -250px) scale(0.4, 0.4);
+  /* opacity: 0 */
 }
-.normal4 {
-	aspect-ratio: 1920 / 1080;
-	position: absolute;
-	left: 0;
-	width: 60%;
-	opacity: 0.8;
+.level-5 > .l5-center {
+  aspect-ratio: 1920 / 1080;
+  width: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-.normal5 {
-	aspect-ratio: 1/ 1;
-	position: absolute;
-	height: 50%;
-	right: 0;
-	bottom: 0;
-	opacity: 0.7;
+/* 第四层 - level4层 */
+.earth-container>.cloud> .cloud-level.level-4 {
+  z-index: 1;
+  opacity: 0.3;
+  transform: translate3d(0, 0, -200px) scale(0.5, 0.5);
+  /* opacity: 0; */
 }
-
+.level-4>.l4-center {
+  aspect-ratio: 1920 / 1080;
+  width: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+/* 第三层 - level3层 */
+.earth-container>.cloud> .cloud-level.level-3 {
+  z-index: 2;
+  opacity: 0.4;
+  transform: translate3d(0, 0, -150px) scale(0.6, 0.6);
+  /* opacity: 0; */
+}
+.level-3 > .l3-left {
+  aspect-ratio: 1 / 1;
+  width: 25%;
+  top: 10%;
+  left: 5%;
+}
+.level-3 > .l3-center {
+  aspect-ratio: 1920 / 1080;
+  width: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.level-3>.l3-right {
+  aspect-ratio: 1 / 1;
+  width: 40%;
+  top: 40%;
+  right: 0;
+  bottom: 0;
+}
+/* 第二层 - level2层 */
+.earth-container>.cloud> .cloud-level.level-2 {
+  z-index: 3;
+  opacity: 0.5;
+  transform: translate3d(0, 0, -100px) scale(0.7, 0.7);
+  /* opacity: 0; */
+}
+.level-2>.l2-center {
+  aspect-ratio: 1920 / 1080;
+  width: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.level-2>.l2-right {
+  aspect-ratio: 1 / 1;
+  width: 40%;
+  top: 0;
+  right: 0;
+}
+/* 第一层 - level1层 */
+.earth-container>.cloud> .cloud-level.level-1 {
+  z-index: 4;
+  opacity: 0.6;
+  transform: translate3d(0, 0, -50px) scale(0.8, 0.8);
+  /* opacity: 0 */
+}
+.level-1>.l1-center {
+  aspect-ratio: 1920 / 1080;
+  width: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 
 /* 顶部占位(3) */
 .position-top {

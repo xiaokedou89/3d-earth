@@ -22,17 +22,31 @@
 		<div id="app">
 			<!-- 全屏背景平铺(1) -->
       <div class="earth-container">
+        <!-- animateCloud -->
         <div class="cloud">
-          <!-- https://pngtree.com/ -->
-          <img class="normal1" src="./assets/earth/cloud1.png" />
-          <img class="normal2" src="./assets/earth/cloud2.png" />
-          <img class="normal3" src="./assets/earth/cloud3.png" />
-          <img class="normal4" src="./assets/earth/cloud4.png" />
-          <img class="normal5" src="./assets/earth/cloud5.png" />
+          <!-- 层级越高越在最底下 -->
+          <!-- <div class="cloud-level level-5">
+            <img class="cloud-image l5-center" src="./img/homepage/resituation/cloud6.png" />
+          </div>
+          <div class="cloud-level level-4">
+            <img class="cloud-image l4-center" src="./img/homepage/resituation/cloud3.png" />
+          </div> -->
+          <div class="cloud-level level-3">
+            <img class="cloud-image l3-left" src="./img/homepage/resituation/cloud1.png" />
+            <img class="cloud-image l3-center" src="./img/homepage/resituation/cloud4.png" />
+            <img class="cloud-image l3-right" src="./img/homepage/resituation/cloud5.png" />
+          </div>
+          <div class="cloud-level level-2">
+            <img class="cloud-image l2-center" src="./img/homepage/resituation/cloud8.png" />
+            <img class="cloud-image l2-right" src="./img/homepage/resituation/cloud10.png" />
+          </div>
+          <div class="cloud-level level-1">
+            <img class="cloud-image l1-center" src="./img/homepage/resituation/cloud9.png" />
+          </div>
         </div>
-        <my-earth ref="earth" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
-        <!-- <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth> -->
-        <!-- <earth-map ref="earthMap"></earth-map> -->
+        <!-- <my-earth ref="earth" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth> -->
+        <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
+        <earth-map ref="earthMap"></earth-map>
       </div>
 			<!-- 顶部占位(3) -->
 			<div class="position-top">
@@ -160,181 +174,8 @@
           <div class="track-item" :class="{active: positionTop.showControls}" @click="deactiveShowControls"></div>
         </div>
       </div>
-			<!-- 地球上方 - 两个角的外部 -->
-      <div class="position-center-top-corner" style="display: none">
-        <!-- 左上角 -->
-        <div class="left corner-item">
-          <div class="arrow"></div>
-          <div class="content">
-            <div class="left">
-              <div class="counts number-font">
-                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.A.num).value" :key="index">
-                  <div class="num-item-inner" :data-height="num">
-                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                  </div>
-                </div>
-                <span class="unit">{{formatNumsData(corner.A.num).unit}}</span>
-              </div>
-              <div class="label">A业务</div>
-            </div>
-            <div class="right">
-              <div class="text">
-                <span>累计回传</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.A.count, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatBytesData(corner.A.count, 1).unit}}B</span>
-                </div>
-                <span>数据</span>
-              </div>
-              <div class="text">
-                <span>实时带宽</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.A.rate, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatBytesData(corner.A.rate, 1).unit}}bps</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 右上角 -->
-        <div class="right corner-item">
-          <div class="arrow"></div>
-          <div class="content">
-            <div class="left">
-              <div class="text">
-                <span>累计传输</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.B.count, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatNumsUnit(corner.B.count, 1).unit}}条</span>
-                </div>
-                <span>数据</span>
-              </div>
-              <div class="text">
-                <span>实时带宽</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.B.rate, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatBytesData(corner.B.rate, 1).unit}}bps</span>
-                </div>
-              </div>
-            </div>
-            <div class="right">
-              <div class="counts number-font">
-                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.B.num).value" :key="index">
-                  <div class="num-item-inner" :data-height="num">
-                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                  </div>
-                </div>
-                <span class="unit">{{formatNumsData(corner.B.num).unit}}</span>
-              </div>
-              <div class="label">B业务</div>
-            </div>
-          </div>
-        </div>
-      </div>
-			<!-- 地球下方 - 两个角的外部 -->
-      <div class="position-center-bottom-corner" style="display: none">
-        <!-- 左下角 -->
-        <div class="left corner-item">
-          <div class="arrow"></div>
-          <div class="content">
-            <div class="left">
-              <div class="counts number-font">
-                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.C.num).value" :key="index">
-                  <div class="num-item-inner" :data-height="num">
-                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                  </div>
-                </div>
-                <span class="unit">{{formatNumsData(corner.C.num).unit}}</span>
-              </div>
-              <div class="label">C业务</div>
-            </div>
-            <div class="right">
-              <div class="text">
-                <img src="" alt="">
-                <span>累计投送</span>
-                <div class="counts number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.C.count).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatNumsUnit(corner.C.count).unit}}次</span>
-                </div>
-              </div>
-              <div class="text">
-                <span>实时带宽</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.C.rate, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatBytesData(corner.C.rate, 1).unit}}bps</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 右下角 -->
-        <div class="right corner-item">
-          <div class="arrow"></div>
-          <div class="content">
-            <div class="left">
-              <div class="text">
-                <span>累计支撑</span>
-                <div class="counts number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatNumsUnit(corner.O.count, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatNumsUnit(corner.O.count, 1).unit}}次</span>
-                </div>
-              </div>
-              <div class="text">
-                <span>实时带宽</span>
-                <div class="number-font">
-                  <div class="num-item-12" v-for="(num, index) in formatBytesData(corner.O.rate, 1).value" :key="index" :class="{dot: num === '.'}">
-                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
-                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                    </div>
-                  </div>
-                  <span class="unit">{{formatBytesData(corner.O.rate, 1).unit}}bps</span>
-                </div>
-              </div>
-            </div>
-            <div class="right">
-              <div class="counts number-font">
-                <div class="num-item-10" v-for="(num, index) in formatNumsData(corner.O.num).value" :key="index">
-                  <div class="num-item-inner" :data-height="num">
-                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
-                  </div>
-                </div>
-                <span class="unit">{{formatNumsData(corner.O.num).unit}}</span>
-              </div>
-              <div class="label">日常保障</div>
-            </div>
-          </div>
-        </div>
-      </div>
 			<!-- 地球下方(3) -->
-      <div class="position-center-bottom">
+      <div class="position-center-bottom" style="display: none">
         <!-- 支撑态势标题 -->
         <div class="position-title">
           <img class="position-title-content" src="./img/homepage/support/title.svg" />

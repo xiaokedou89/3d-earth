@@ -1,3 +1,12 @@
+// 默认下钻地球时传入的中国地图飞线数据
+let defaultFlightData = [
+  { start: [91.1, 29.6], end: [116.4, 39.9] },
+  { start: [100.2, 25.5], end: [116.4, 39.9] },
+  { start: [126.5, 43.8], end: [116.4, 39.9] },
+  { start: [87.6, 43.7], end: [116.4, 39.9] },
+  { start: [111.6, 40.8], end: [116.4, 39.9] },
+  { start: [121.4, 31.2], end: [116.4, 39.9] },
+];
 let chartColors = [
 	'rgba(5, 253, 252, 1)', 
 	'rgba(58, 137, 255, 1)', 
@@ -598,6 +607,7 @@ $app = new Vue({
 	el: '#app',
 	data(){
 		return {
+      cloudTL: null,
 			dialogFlag: false,
 			dialogerContent: [
 				{ 
@@ -679,29 +689,6 @@ $app = new Vue({
           disabled: true 
         }
 			],
-			// 地球四个角的数据
-      corner: {
-        A: {
-          num: 14,
-          count: 0,
-          rate: 0
-        },
-        B: {
-          num: 0,
-          count: 0,
-          rate: 0
-        },
-        C: {
-          num: 0,
-          count: 0,
-          rate: 0
-        },
-        O: { // 数据恢复成0
-          num: 0,
-          count: 0,
-          rate: 0
-        },
-      },
 			// 资源池数据 earthleftdata
       resourcePool: {
         key: 'total',
@@ -1083,22 +1070,54 @@ $app = new Vue({
       this.getSupport(true); // 筛选支持态势图表数据
     },
 		test(e) {
-      this.$refs.earth.clearAllDatas();
+      // this.$refs.earth.clearAllDatas();
       // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
-      // this.$refs.earth.outFlyToLocation(116.41995, 40.18994);
-      this.animateCloud();
+      // 控制进入动画
+      this.animateDownInEarthMap(defaultFlightData);
     },
     ttt(){
-      // this.$refs.earth.outFlyToOrigin();
-      this.$refs.earth.scene.add(this.$refs.earth.earth.createCloud())
+      this.animateUpToEarth();
     },
     // 尝试添加云层动画
-    animateCloud(){
-      gsap.fromTo('.cloud', {
-        right: '-100%', opacity: 0.8
-      }, {
-        right: '100%', opacity: 1, duration: 5, ease: 'power1.out'
-      });
+    async animateCloud() {
+      let cloudContainer = document.querySelector('.cloud');
+      cloudContainer.style.zIndex = 1;
+      if (this.cloudTL) {
+        this.cloudTL.play();
+      } else {
+        this.cloudTL = gsap.timeline();
+        this.cloudTL.to('.cloud', {
+          opacity: 1,
+          duration: 0.8
+        });
+        this.cloudTL.to('.level-1', {
+          scale: 2, 
+          z: 50,
+          opacity: 0,
+          duration: 1
+        }, 0);
+        this.cloudTL.to('.level-2', {
+          scale: 2,
+          z: 0,
+          opacity: 0,
+          duration: 1
+        }, 0.2);
+        this.cloudTL.to('.level-3', {
+          scale: 2,
+          z: -50,
+          opacity: 0,
+          duration: 1,
+          onComplete(){
+            cloudContainer.style.zIndex = -2;
+          }
+        }, 0.4)
+      }
+    },
+    animateCloudReverse(){
+      let cloudContainer = document.querySelector('.cloud');
+      cloudContainer.style.zIndex = 1;
+      this.cloudTL.reverse();
+      cloudContainer.style.zIndex = -2;
     },
     render() {
       this.$refs.earth.renderDatas([
@@ -1315,12 +1334,7 @@ $app = new Vue({
             // 驱动地球上方数字滚动动画
             $app.animateNumberItemInner('.position-center-top');
             $app.positionTop.showTracks = true;
-            gsap.fromTo('.corner-item.left', { scale: 0.5, x: '-0.6875rem' }, { opacity: 1, scale: 1, x: 0, duration: 3, ease: 'power4.inOut'});
-            gsap.fromTo('.corner-item.right', { scale: 0.5, x: '50%' }, { opacity: 1, scale: 1, x: 0, duration: 3, ease: 'power4.inOut', onComplete(){
-              $app.animateNumberItemInner('.position-center-top-corner');
-              $app.animateNumberItemInner('.position-center-bottom-corner');
-              $app.positionTop.isfocusDisabled = false;
-            }});
+            $app.positionTop.isfocusDisabled = false;
           }
         }
       );
@@ -1329,32 +1343,20 @@ $app = new Vue({
 		leaveAnimate(action) {
       this.positionTop.isfocusDisabled = true;
       $app.positionTop.showTracks = false;
-      gsap.fromTo('.corner-item.left', { opacity: 1, scale: 1, x: 0 }, { scale: 0.5, x: '-0.6875rem', opacity: 0, duration: 1, ease: 'power4.inOut'}) // 加快进入工作台的速度
-      gsap.fromTo('.corner-item.right', { opacity: 1, scale: 1, x: 0 }, { scale: 0.5, x: '50%', opacity: 0, duration: 1, ease: 'power4.inOut', onComplete(){
-        gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
-        gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 1, ease: 'expo.out' });
-        gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
-        $app.positionTop.isfocusDisabled = true;
-        if (!$app.positionTop.showControls) {
-          gsap.fromTo('.center-top-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete(){
-            action()
-          } });
-        } else {
-          gsap.fromTo('.center-control-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out' });
-          gsap.fromTo('.center-earth-control', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete(){
-            action();
-          } });
-        }
-      }})
-      // gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
-      // gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
-      // gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
-      // if (!this.positionTop.showControls) {
-      //   gsap.fromTo('.center-top-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 2, ease: 'expo.out' });
-      // } else {
-      //   gsap.fromTo('.center-control-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 2, ease: 'expo.out' });
-      //   gsap.fromTo('.center-earth-control', { rotateY: '0deg' }, { rotateY: '90deg', duration: 2, ease: 'expo.out' });
-      // }
+      gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
+      gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 1, ease: 'expo.out' });
+      gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
+      $app.positionTop.isfocusDisabled = true;
+      if (!$app.positionTop.showControls) {
+        gsap.fromTo('.center-top-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete(){
+          action()
+        } });
+      } else {
+        gsap.fromTo('.center-control-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out' });
+        gsap.fromTo('.center-earth-control', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete(){
+          action();
+        } });
+      }
     },
 		controlAnimate() {
       this.positionTop.isfocusDisabled = true;
@@ -1374,29 +1376,141 @@ $app = new Vue({
             // 驱动地球上方数字滚动动画
             $app.animateNumberItemInner('.position-center-top');
             $app.positionTop.showTracks = true;
-            gsap.fromTo('.corner-item.left', { scale: 0.5, x: '-0.6875rem' }, { opacity: 1, scale: 1, x: 0, duration: 3, ease: 'power4.inOut'});
-            gsap.fromTo('.corner-item.right', { scale: 0.5, x: '50%' }, { opacity: 1, scale: 1, x: 0, duration: 3, ease: 'power4.inOut', onComplete(){
-              $app.animateNumberItemInner('.position-center-top-corner');
-              $app.animateNumberItemInner('.position-center-bottom-corner');
-              $app.positionTop.isfocusDisabled = false;
-            }});
+            $app.positionTop.isfocusDisabled = false;
           }
         }
       );
     },
 		controlAnimateReverse() {
       this.positionTop.isfocusDisabled = true;
-      gsap.fromTo('.corner-item.left', { opacity: 1, scale: 1, x: 0 }, { scale: 0.5, x: '-0.6875rem', opacity: 0, duration: 3, ease: 'power4.inOut'});
-      gsap.fromTo('.corner-item.right', { opacity: 1, scale: 1, x: 0 }, { scale: 0.5, x: '50%', opacity: 0, duration: 3, ease: 'power4.inOut', onComplete(){
-        gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
+      gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
         gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
         gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out', onComplete(){
           $app.positionTop.isfocusDisabled = false;
         }});
-      }});
-      // gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
-      // gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
-      // gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
+    },
+    // 地球下钻到中国地图
+    animateDownInEarthMap(flightData) {
+      if (!this.$refs.earth.camera || !this.$refs.earth.controls || !this.$refs.earth.earth) return;
+      // 获取地球和地图DOM
+      let earthDom = document.getElementById('my-earth');
+      let earthMapDom = document.getElementById('my-earth-map');
+      // 切换展示模式开关 - 禁用地球相关的模式操作
+      // this.isEarthMap = true;
+      // 暂停地球旋转
+      this.positionTop.earthRotation = false;
+      this.$refs.earth.stopRotation();
+      // 转换地球和地图的层级
+      earthDom.style.zIndex = -1;
+      earthMapDom.style.zIndex = 0;
+      // 传入中国中心位置的经纬度2D点位获取两个3D点位
+      let { target, position } = $app.$refs.earth.outReturnAnimationVector({ N: 108.55, E: 40.18994 }, 50);
+      // 获取相机移动当前的最远距离点位
+      let maxDisPoint = $app.$refs.earth.outReturnMaxDisPoint();
+      // 设置地球可以拉近，地球控制器原始minDistance为220
+      $app.$refs.earth.controls.minDistance = 50;
+      // todo - 这里要获取地图的飞线数据 - 加载渲染飞线
+      // $app.$refs.earthMap.addFlightData(flightData);
+      // Step1 - 把地图底部的大圆盘隐掉
+      gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
+      // Step2 - 相机保持视角拉远到最远距离
+      gsap.to(this.$refs.earth.camera.position, {
+        x: maxDisPoint.x,
+        y: maxDisPoint.y,
+        z: maxDisPoint.z,
+        duration: 1.5,
+        ease: "power2.out",
+        onUpdate() {
+          $app.$refs.earth.camera.updateMatrixWorld();
+        },
+        onComplete(){
+          // Step3 - 开始渐隐地球
+          gsap.to(earthDom, {
+            opacity: 0,
+            duration: 3,
+            ease: 'slow.out'
+          });
+          // Step4 - 拉近相机
+          gsap.to($app.$refs.earth.camera.position, {
+            x: position.x,
+            y: position.y,
+            z: position.z,
+            duration: 2,
+            ease: 'power1.out',
+            onStart() {
+              $app.$refs.earth.controls.autoRotate = false;
+            },
+            onUpdate() {
+              $app.$refs.earth.controls.target.copy(target);
+              $app.$refs.earth.controls.update();
+            },
+            onComplete(){
+              // Step5 - 云层动画
+              $app.animateCloud();
+              // 显示地图
+              gsap.to(earthMapDom, {
+                opacity: 1,
+                delay: 1,
+                duration: 1,
+                onComplete(){
+                  $app.$refs.earthMap.addFlightData(flightData);
+                }
+              })
+            }
+          });
+        }
+      })
+    },
+    // 从地图上窜到地球
+    animateUpToEarth(){
+      if (!this.$refs.earth.camera || !this.$refs.earth.controls || !this.$refs.earth.earth) return;
+      // 获取地球和地图DOM
+      let earthDom = document.getElementById('my-earth');
+      let earthMapDom = document.getElementById('my-earth-map');
+      // 切换展示模式开关 - 禁用地球相关的模式操作
+      // this.isEarthMap = false;
+      // 转换地球和地图的层级
+      earthDom.style.zIndex = 0;
+      earthMapDom.style.zIndex = -1;
+      gsap.to(earthMapDom, {
+        opacity: 0,
+        duration: 1,
+        ease: 'power1.out',
+        onComplete(){
+          let cloudContainer = document.querySelector('.cloud');
+          cloudContainer.style.zIndex = 1;
+          $app.cloudTL.reverse();
+          console.log('上窜到地球完成了')
+        }
+      });
+      gsap.to(earthDom, {
+        opacity: 1,
+        delay: 2.4,
+        duration: 1,
+        ease: 'power1.out',
+      });
+      gsap.to($app.$refs.earth.camera.position, {
+        x: 0,
+        y: 30,
+        z: -200,
+        duration: 2,
+        onUpdate: () => {
+          // 实时更新控制器的焦点，让相机看向目标点
+          $app.$refs.earth.controls.target.copy(new THREE.Vector3(0, 0, 0));
+          $app.$refs.earth.controls.update();
+        },
+        onComplete(){
+          gsap.fromTo('.position-center-bottom', { bottom: '-1.27604rem', opacity: 0 }, { bottom: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out' });
+          $app.$refs.earth.controls.minDistance = 220;
+          $app.changeRotation();
+          let cloudContainer = document.querySelector('.cloud');
+          cloudContainer.style.zIndex = -2;
+        }
+      });
+      // 设置地球可以拉近，地球控制器原始minDistance为220
+      // $app.$refs.earth.controls.minDistance = 50;
+      // 暂停地球旋转
+      // this.positionTop.earthRotation && this.changeRotation();
     },
 		// 驱动数字滚动动画 - 需要传入对应区域的外层选择器 - 在数值获取到并转为String后调用
     animateNumberItemInner(dom) {
@@ -1585,8 +1699,6 @@ $app = new Vue({
       this.getSupport();
       // 获取顶部三个数
       this.getTopThree();
-      // 获取地球四个角
-      this.getCorner();
       // 获取地球左侧数据 - 资源池
       this.getResourcePool();
       // 获取地球左侧数据 - 资源分布
@@ -1846,30 +1958,6 @@ $app = new Vue({
       $app.centerTop[2].value = '681';
 			$app.centerTop[3].value = '100';
 			$app.animateNumberItemInner('.position-center-top');
-		},
-		// 获取地球四个角的数据
-		getCorner(){
-			RequestDatas.corner.forEach(item => {
-        if (item.sys && item.sys.toLowerCase() === 'a'){
-          let upBytes = item.up_bytes || 0;
-          let downBytes = item.down_bytes || 0;
-          $app.corner.A.count = upBytes + downBytes;
-          $app.corner.A.rate = item.rate && typeof item.rate === 'number' ? +item.rate.toFixed(1) : 0;
-          // $app.corner.A.num = item.count && typeof item.count === 'number' ? item.count : 0;
-          // 写死数据
-          $app.corner.A.num = '14'
-        } else if (item.sys && ['o', 'b', 'c'].includes(item.sys.toLowerCase())) {
-          $app.corner[item.sys.toUpperCase()].count = item.request_total || 0;
-          $app.corner[item.sys.toUpperCase()].rate = item.rate && typeof item.rate === 'number' ? +item.rate.toFixed(1) : 0;
-          $app.corner[item.sys.toUpperCase()].num = item.count && typeof item.count === 'number' ? item.count : 0;
-          // 写死数据
-          $app.corner.B.count = 0;
-          $app.corner.B.rate = 0;
-          $app.corner.B.num = 0;
-        }
-      });
-			$app.animateNumberItemInner('.position-center-bottom-corner');
-      $app.animateNumberItemInner('.position-center-top-corner');
 		},
 		// 获取地球下方支撑态势图表 数据
 		getSupport(isUpdate){
