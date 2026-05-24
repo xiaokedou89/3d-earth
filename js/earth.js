@@ -1,4 +1,3 @@
-console.log(THREE)
 // 基类
 class Basic {
   constructor(dom) {
@@ -142,7 +141,8 @@ class Resources {
   }
   // 获取模型贴图
   getTextures() {
-    const fileSuffix = ['circle', 'gradient', 'redCircle', 'label', 'aperture', 'glow', 'light_column', 'aircraft'];
+    // todo-source
+    const fileSuffix = ['circle', 'gradient', 'redCircle', 'label', 'aperture', 'glow', 'light_column', 'aircraft', 'guangquan01', 'guangquan02', 'huiguang'];
     const filePath = this.filePath;
     const textures = fileSuffix.map((item) => {
       // console.log(`检查贴图路径: ${filePath}${item}.png`)
@@ -296,6 +296,32 @@ function createLightPillar(options) {
   const material = new THREE.MeshBasicMaterial({
     map: options.textures.light_column,
     color: options.index == 0 ? options.punctuation.lightColumn.startColor : options.punctuation.lightColumn.endColor,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false //是否对深度缓冲区有任何的影响
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  const group = new THREE.Group();
+  // 两个光柱交叉叠加
+  group.add(mesh, mesh.clone().rotateZ(Math.PI / 2)); //几何体绕x轴旋转了，所以mesh旋转轴变为z
+  // 经纬度转球面坐标
+  const SphereCoord = lon2xyz(options.radius, options.lon, options.lat); //SphereCoord球面坐标
+  group.position.set(SphereCoord.x, SphereCoord.y, SphereCoord.z); //设置mesh位置
+  const coordVec3 = new THREE.Vector3(SphereCoord.x, SphereCoord.y, SphereCoord.z).normalize();
+  const meshNormal = new THREE.Vector3(0, 0, 1);
+  group.quaternion.setFromUnitVectors(meshNormal, coordVec3);
+  return group;
+}
+// 创建资源光柱debugger
+function createSourceLightPillar(options, { heightRate, radiusRate, type }){
+  const height = (options.radius * 0.3) / 3;
+  const geometry = new THREE.PlaneBufferGeometry(options.radius * 0.05 * radiusRate, height * heightRate);
+  geometry.rotateX(Math.PI / 2);
+  geometry.translate(0, 0, height / 2);
+  const material = new THREE.MeshBasicMaterial({
+    // map: options.textures.light_column_source,
+    map: options.textures.light_column,
+    color: options.sourceLightPillarColors[type],
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false //是否对深度缓冲区有任何的影响
@@ -645,7 +671,88 @@ function getPointAlongRay(longitude, latitude, distance = 50, earthRadius = 50, 
     
     return resultPoint;
 }
+// todo-source 渐变着色器类
+class GradientShader {
+  constructor(material, config) {
+    this.shader = null
+    this.config = Object.assign(
+      {
+        uColor1: 0x2a6f72,
+        uColor2: 0x0d2025,
+        size: 15.0,
+        dir: "x", // 'x ,y,z
+      },
+      config
+    )
+    this.init(material)
+  }
+  init(material) {
+    let { uColor1, uColor2, dir, size } = this.config
+    let dirMap = { x: 1.0, y: 2.0, z: 3.0 }
+    material.onBeforeCompile = (shader) => {
+      this.shader = shader
 
+      shader.uniforms = {
+        ...shader.uniforms,
+        uColor1: { value: new THREE.Color(uColor1) }, // 419daa
+        uColor2: { value: new THREE.Color(uColor2) },
+        uDir: { value: dirMap[dir] },
+        uSize: { value: size }, // 物体的宽度，或者高度
+      }
+      shader.vertexShader = shader.vertexShader.replace(
+        "void main() {",
+        `
+                attribute float alpha;
+                varying vec3 vPosition;
+                varying float vAlpha;
+                void main() {
+                  vAlpha = alpha;
+                  vPosition = position;
+              `
+      )
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "void main() {",
+        `
+                varying vec3 vPosition;
+                varying float vAlpha;
+                uniform vec3 uColor1;
+                uniform vec3 uColor2;
+                uniform float uDir;
+                uniform float uSize;
+              
+                void main() {
+              `
+      )
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <opaque_fragment>",
+        /* glsl */ `
+              #ifdef OPAQUE
+              diffuseColor.a = 1.0;
+              #endif
+              
+              // https://github.com/mrdoob/three.js/pull/22425
+              #ifdef USE_TRANSMISSION
+              diffuseColor.a *= transmissionAlpha + 0.1;
+              #endif
+              // vec3 gradient = mix(uColor1, uColor2, vPosition.x / 15.0); 
+              vec3 gradient = vec3(0.0,0.0,0.0);
+              if(uDir==1.0){
+                gradient = mix(uColor1, uColor2, vPosition.x/ uSize); 
+              }else if(uDir==2.0){
+                gradient = mix(uColor1, uColor2, vPosition.z/ uSize); 
+              }else if(uDir==3.0){
+                gradient = mix(uColor1, uColor2, vPosition.y/ uSize); 
+              }
+              outgoingLight = outgoingLight * gradient;
+              
+              
+              gl_FragColor = vec4( outgoingLight, diffuseColor.a  );
+              `
+      )
+    }
+    // console.log(material)
+  }
+}
 // 声明地球类
 class Earth {
   constructor(options) {
@@ -974,19 +1081,24 @@ class Earth {
       const radius = this.options.earth.radius;
       const lon = item.E; //经度
       const lat = item.N; //纬度
-      // @important - 底座点位周边的材质(蓝色光圈)
-      this.punctuationMaterial = new THREE.MeshBasicMaterial({
-        // color: this.options.punctuation.circleColor,
-        // map: this.options.textures.label,
-        map: this.options.textures.circle,
-        transparent: true, //使用背景透明的png贴图，注意开启透明计算
-        depthWrite: false //禁止写入深度缓冲区数据
-      });
 
-      const mesh = createPointMesh({ radius, lon, lat, material: this.punctuationMaterial }); //光柱底座矩形平面
-      mesh.userData['selectable'] = true;
-      mesh.userData['positionName'] = item.name;
-      this.markupPoint.add(mesh);
+      // ======================> 圆形底座
+      // @important - 底座点位周边的材质(蓝色光圈)
+      // this.punctuationMaterial = new THREE.MeshBasicMaterial({
+      //   // color: this.options.punctuation.circleColor,
+      //   // map: this.options.textures.label,
+      //   map: this.options.textures.circle,
+      //   transparent: true, //使用背景透明的png贴图，注意开启透明计算
+      //   depthWrite: false //禁止写入深度缓冲区数据
+      // });
+
+      // const mesh = createPointMesh({ radius, lon, lat, material: this.punctuationMaterial }); //光柱底座矩形平面
+      // mesh.userData['selectable'] = true;
+      // mesh.userData['positionName'] = item.name;
+      // this.markupPoint.add(mesh);
+      // <======================
+
+      // ======================> 资源光柱
       const LightPillar = createSourceLightPillar({
         radius: this.options.earth.radius,
         lon,
@@ -1004,12 +1116,17 @@ class Earth {
       LightPillar.userData['selectable'] = true;
       LightPillar.userData['positionName'] = item.name;
       this.markupPoint.add(LightPillar);
-      const WaveMesh = createWaveMesh({ radius, lon, lat, textures: this.options.textures }); //波动光圈
-      WaveMesh.userData['isWaveMesh'] = true;
-      WaveMesh.userData['selectable'] = true;
-      WaveMesh.userData['positionName'] = item.name;
-      this.markupPoint.add(WaveMesh);
-      this.waveMeshArr.push(WaveMesh);
+      // <======================
+
+      // ======================> 波浪纹
+      // const WaveMesh = createWaveMesh({ radius, lon, lat, textures: this.options.textures }); //波动光圈
+      // WaveMesh.userData['isWaveMesh'] = true;
+      // WaveMesh.userData['selectable'] = true;
+      // WaveMesh.userData['positionName'] = item.name;
+      // this.markupPoint.add(WaveMesh);
+      // this.waveMeshArr.push(WaveMesh);
+      // <======================
+
       this.markupPoint.userData['isMarkupPoint'] = true;
       this.earthGroup.add(this.markupPoint);
     })
@@ -1288,6 +1405,150 @@ class Earth {
     if (this.satelliteModel) {
       this.satelliteModel.lookAt(0, 0, 0);
     }
+    // todo-source
+    let markupPoint = this.earthGroup.children.find(item => item.userData['isMarkupPoint']);
+    if (markupPoint){
+      markupPoint.children.forEach(mesh => {
+        if (mesh.userData['isQuan']){
+          mesh.rotation.z += 0.05
+        }
+      })
+    }
+  }
+  // todo-source
+  createSource(datas){
+    this.markupPoint.clear();
+    const factor = 0.7;
+    const radius = this.options.earth.radius;
+    datas.forEach((item, index) => {
+      let heightRatio = 0.6;
+      switch (item.rank) {
+        case 'small':
+          heightRatio = 0.3;
+          break;
+        case 'middle':
+          heightRatio = 0.6;
+          break;
+        case 'large':
+          heightRatio = 1;
+          break;
+      }
+      let geoHeight = heightRatio * 10;
+      let material = new THREE.MeshBasicMaterial({
+        // 这里可以添加颜色
+        // color: 0xffffff,
+        // color: 0xEF4444,
+        color: item.color,
+        transparent: true,
+        opacity: 0.8,
+        // depthTest: false,
+        depthWrite: false,
+        fog: false,
+      });
+      new GradientShader(material, {
+        // uColor1: index > 3 ? 0xfbdf88 : 0x50bbfe,
+        // uColor2: index > 3 ? 0xfffef4 : 0x77fbf5,
+        // uColor1: 0xEF4444,
+        uColor1: item.color,
+        uColor2: 0x77fbf5,
+        size: geoHeight,
+        dir: "y",
+      });
+      // const geo = new THREE.BoxGeometry(0.5 * factor, 0.5 * factor, geoHeight);
+      const geo = new THREE.BoxGeometry(0.8 * factor, geoHeight, 0.8 * factor);
+      geo.translate(0, geoHeight / 2, 0);
+      const mesh = new THREE.Mesh(geo, material);
+      const SphereCoord = lon2xyz(radius, item.E, item.N);
+      const normal = SphereCoord.clone().normalize();
+
+
+      mesh.position.copy(SphereCoord);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        normal
+      );
+      mesh.quaternion.copy(quaternion);
+      let hg = this.createHUIGUANG(geoHeight, index > 3 ? 0xfffef4 : 0x77fbf5)
+
+      // 底部内光圈的材质
+      let innerQuanMaterial = new THREE.MeshBasicMaterial({
+        // color: this.options.punctuation.circleColor,
+        // map: this.options.textures.label,
+        color: 0xffffff,
+        map: this.options.textures.guangquan01,
+        alphaMap: this.options.textures.guangquan01,
+        opacity: 1,
+        transparent: true, //使用背景透明的png贴图，注意开启透明计算
+        depthWrite: false, //禁止写入深度缓冲区数据
+        blending: THREE.AdditiveBlending,
+      });
+      // 底部外光圈的材质
+      let outerQuanMaterial = new THREE.MeshBasicMaterial({
+        // color: this.options.punctuation.circleColor,
+        // map: this.options.textures.label,
+        color: 0xffffff,
+        map: this.options.textures.guangquan02,
+        alphaMap: this.options.textures.guangquan02,
+        opacity: 1,
+        transparent: true, //使用背景透明的png贴图，注意开启透明计算
+        depthWrite: false, //禁止写入深度缓冲区数据
+        blending: THREE.AdditiveBlending,
+      });
+
+
+      const quanGeo1 = new THREE.PlaneBufferGeometry(1, 1); //默认在XOY平面上
+      const innerQuanMesh = new THREE.Mesh(quanGeo1, innerQuanMaterial);
+      const quanGeo2 = new THREE.PlaneBufferGeometry(1, 1); //默认在XOY平面上
+      const outerQuanMesh = new THREE.Mesh(quanGeo2, outerQuanMaterial);
+      // 经纬度转球面坐标
+      const coord = lon2xyz(radius, item.E, item.N);
+      const size = radius * 0.05; // 矩形平面Mesh的尺寸
+      innerQuanMesh.scale.set(size, size, size); // 设置mesh大小
+      outerQuanMesh.scale.set(size, size, size); // 设置mesh大小
+      // 设置mesh位置
+      innerQuanMesh.position.set(coord.x, coord.y, coord.z);
+      outerQuanMesh.position.set(coord.x, coord.y, coord.z);
+      const coordVec3 = new THREE.Vector3(coord.x, coord.y, coord.z).normalize();
+      const meshNormal = new THREE.Vector3(0, 0, 1);
+      innerQuanMesh.quaternion.setFromUnitVectors(meshNormal, coordVec3);
+      innerQuanMesh.userData['isQuan'] = true;
+      outerQuanMesh.quaternion.setFromUnitVectors(meshNormal, coordVec3);
+      this.markupPoint.add(innerQuanMesh);
+      this.markupPoint.add(outerQuanMesh);
+      mesh.add(...hg);
+      this.markupPoint.add(mesh)
+    });
+    this.markupPoint.userData['isMarkupPoint'] = true;
+    this.earthGroup.add(this.markupPoint);
+    console.log(this.earthGroup)
+  }
+  // todo-source
+  createHUIGUANG(h, color) {
+    // let geometry = new THREE.PlaneGeometry(0.35, h)
+    let geometry = new THREE.PlaneGeometry(3, h)
+    geometry.translate(0, h / 2, 0)
+    // geometry.translate(0, 0, 0)
+    const texture = this.options.textures.huiguang;
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    let material = new THREE.MeshBasicMaterial({
+      color: color,
+      map: texture,
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    })
+    let mesh = new THREE.Mesh(geometry, material)
+    mesh.renderOrder = 10
+    // mesh.rotateX(Math.PI / 2)
+    let mesh2 = mesh.clone()
+    let mesh3 = mesh.clone()
+    mesh2.rotateY((Math.PI / 180) * 60)
+    mesh3.rotateY((Math.PI / 180) * 120)
+    return [mesh, mesh2, mesh3]
   }
 }
 
@@ -1373,6 +1634,43 @@ const MyEarth = {
           yj: '',
           zd: ''
         };
+      }
+    },
+    // 资源视图的 9 种资源分类对应的颜色
+    sourceLightPillarColors: {
+      type: Object,
+      default() {
+        return {
+          // 边境 - 蓝!
+          bj: 0x0000FF,
+          // 卫星 - 紫!
+          wx: 0x800080,
+          // 云主机 - 绿
+          yzj: 0x20B2AA,
+          // 机场 - 金
+          jc: 0xFFD700,
+          // 住宅 - 橙!
+          zz: 0xFF8C00,
+          // 物联网 - 印度红!
+          wlw: 0xCD5C5C,
+          // 云专线 - 粉
+          yzx: 0xFFB6C1,
+          // 接入主机 - 亮蓝
+          jr: 0x00FFFF,
+          // 匿名 - 白!
+          nm: 0xffffff
+        }
+      }
+    },
+    // 资源视图中资源量对应等级下，光柱渲染时的h 和 radius比率
+    sourceLightPillarRank: {
+      type: Object,
+      default(){
+        return {
+          small: { h: 1, r: 2 },
+          middle: { h: 3, r: 6 },
+          large: { h: 5, r: 6 },
+        }
       }
     }
   },
@@ -1463,8 +1761,6 @@ const MyEarth = {
           this.addEvent(this.dom.firstChild);
         }
         this.render();
-        console.log('看一下初始地球组的y')
-        console.log(this.earth.earthGroup)
       }, '/assets/earth/');
     },
     addComposer() {
@@ -1518,7 +1814,9 @@ const MyEarth = {
           speed: 0.004 // 拖尾飞线的速度
         },
         lineColors: this.lineColors,
-        flyLineColors: this.flyLineColors
+        flyLineColors: this.flyLineColors,
+        // 传入的资源光柱颜色
+        sourceLightPillarColors: this.sourceLightPillarColors
       });
 
       this.scene.add(this.earth.group);
@@ -1675,14 +1973,16 @@ const MyEarth = {
       this.earth.createSpriteLabelAsync();
       // this.createAnimateCircle() // 创建环绕卫星
       this.earth.createFlyLine(); // 创建飞线
+    },
+    // 外部方法 - 尝试为资源视图添加新的资源点位 todo-source
+    outRenderSource(datas){
+      console.log(datas)
+      //sourceLightPillarColors
+      const dataMap = datas.map(item => {
+        item.color = this.sourceLightPillarColors[item.type];
+        return item;
+      })
+      this.earth.createSource(dataMap);
     }
   }
 };
-console.log(Math.atan2(0, 0))
-console.log(Math.atan2(45, 45))
-console.log(Math.atan2(90, 0))
-console.log(Math.atan2(45, -45))
-console.log(Math.atan2(0, -90))
-console.log(Math.atan2(-45, -45))
-console.log(Math.atan2(-90, 0))
-console.log(Math.atan2(-45, 45))

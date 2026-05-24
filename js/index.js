@@ -608,6 +608,27 @@ $app = new Vue({
 	data(){
 		return {
       cloudTL: null,
+      viewSource: {
+        key: 'source',
+        imgPre: 'zy',
+        centerTop: [
+          { label: '资源类型', value: '893' },
+          { label: '节点数量', value: '23' },
+          { label: '覆盖地区', value: '86' },
+          { label: '补给渠道', value: '236' }
+        ],
+        mapDatas: [
+          { E: 121.564438, N: 25.037555, name: "台北市", type: 'bj', rank: 'middle' },
+          { E: -77.48727, N: 39.04364, name: "阿什本", type: 'wx', rank: 'small' },
+          { E: 104.058986, N: 30.676235, name: "成都市", type: 'yzj', rank: 'large' },
+          { E: 118.766351, N: 32.053245, name: "南京市", type: 'jc', rank: 'middle' },
+          { E: 121.019789, N: 14.472021, name: "帕拉尼亚克", type: 'zz', rank: 'small' },
+          { E: -119.417932, N: 36.778261, name: "加利福尼亚州", type: 'wlw', rank: 'large' },
+          { E: 100.506322, N: 13.761612, name: "曼谷", type: 'yzx', rank: 'middle' },
+          { E: 103.762593, N: 1.470747, name: "新山", type: 'jr', rank: 'small' },
+          { E: 90.402832, N: 23.715806, name: "达卡", type: 'nm', rank: 'large' },
+        ]
+      },
 			dialogFlag: false,
 			dialogerContent: [
 				{ 
@@ -1070,13 +1091,18 @@ $app = new Vue({
       this.getSupport(true); // 筛选支持态势图表数据
     },
 		test(e) {
-      // this.$refs.earth.clearAllDatas();
+      this.$refs.earth.clearAllDatas();
       // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
       // 控制进入动画
-      this.animateDownInEarthMap(defaultFlightData);
+      // this.animateDownInEarthMap(defaultFlightData);
+      this.$refs.earth.outRenderSource(this.viewSource.mapDatas);
+      // this.$refs.earth.outRenderSourcePoint(this.viewSource.mapDatas)
+      this.$refs.earth.outRenderSourceLabel(this.viewSource.mapDatas)
     },
     ttt(){
-      this.animateUpToEarth();
+      // this.animateUpToEarth();
+
+      this.$refs.earth.clearAllDatas();
     },
     // 尝试添加云层动画
     async animateCloud() {
