@@ -1094,10 +1094,48 @@ $app = new Vue({
       this.$refs.earth.clearAllDatas();
       // this.$refs.earthMap.addFlightData([{start: 110000, end: 540000}])
       // 控制进入动画
-      // this.animateDownInEarthMap(defaultFlightData);
-      this.$refs.earth.outRenderSource(this.viewSource.mapDatas);
+      this.animateDownInEarthMap(defaultFlightData);
+      // this.$refs.earth.outRenderSource(this.viewSource.mapDatas);
       // this.$refs.earth.outRenderSourcePoint(this.viewSource.mapDatas)
-      this.$refs.earth.outRenderSourceLabel(this.viewSource.mapDatas)
+      // this.$refs.earth.outRenderSourceLabel(this.viewSource.mapDatas)
+      // this.$refs.earth.outRenderTask([
+      //   {
+      //     startArray: {
+      //       name: '杭州',
+      //       N: 30.246026,
+      //       E: 120.210792
+      //     },
+      //     endArray: [
+      //       {
+      //         name: '曼谷',
+      //         N: 22, //维度
+      //         E: 100.49074172973633, //经度
+      //         label: 'xxts',
+      //         status: 'tc'
+      //       }
+      //     ]
+      //   }
+      // ]);
+
+      // outRenderTaskTradition
+      // this.$refs.earth.outRenderTaskTradition([
+      //   {
+      //     startArray: {
+      //       name: '杭州',
+      //       N: 30.246026,
+      //       E: 120.210792
+      //     },
+      //     endArray: [
+      //       {
+      //         name: '曼谷',
+      //         N: 22, //维度
+      //         E: 100.49074172973633, //经度
+      //         label: 'xxts',
+      //         status: 'tc'
+      //       }
+      //     ]
+      //   }
+      // ]);
     },
     ttt(){
       // this.animateUpToEarth();
@@ -1189,16 +1227,6 @@ $app = new Vue({
         return '--';
       }
     },
-		// 工具函数 - 转换图表的流量数据单位
-    // formatBytesData(value) {
-    //   const units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'B'];
-    //   let index = 0;
-    //   while (value >= 1024 && index < units.length - 1) {
-    //     value /= 1024;
-    //     index++;
-    //   }
-    //   return { value: value.toFixed(0), unit: units[index] };
-    // },
     formatBytesData(value, fixed = 0) {
       const units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'B'];
       let index = 0;
@@ -1265,20 +1293,6 @@ $app = new Vue({
         unit
       }
     },
-		// 工具函数 - 处理bps传输速率
-    // deelTransferRatio(ratio){
-    //   let res = ratio && !Number.isNaN(+ratio) ? ratio : 0;
-    //   if (res < 1024){
-    //     res = res.toFixed(2);
-    //   } else if (res >= 1024 && res < 1024 * 1024){
-    //     res = `${(res / 1024).toFixed(2)}K`;
-    //   } else if (res >= 1024 * 1024 && res < 1024 * 1024 * 1024){
-    //     res = `${(res / (1024 * 1024)).toFixed(2)}M`;
-    //   } else if (res >= 1024 * 1024 * 1024) {
-    //     res = `${(res / (1024 * 1024)).toFixed(2)}G`;
-    //   }
-    //   return res;
-    // },
 		deelTransferRatio(ratio) {
       let res = ratio && !Number.isNaN(+ratio) ? ratio : 0;
       if (res < 1000) {
@@ -1627,21 +1641,6 @@ $app = new Vue({
         gsap.to('.left-item', { skewX: 50, height: '4%', opacity: 0, duration: 1, delay: 1 })
       }, 15000);
     },
-		// 左下角资源统计动画 - 普通资源进入 2000
-    // animateResourceRightShow(){
-    //   let rightItem = document.querySelector('.right-item');
-    //   gsap.to('.right-item', { rotateY: '0deg', opacity: 1, duration: 1, onComplete(){
-    //     rightItem.classList.add('show');
-    //   }});
-    // },
-    // // 左下角资源统计动画 - 普通资源离开 2000
-    // animateResourceRightClose(){
-    //   let rightItem = document.querySelector('.right-item');
-    //   setTimeout(() => {
-    //     rightItem.classList.remove('show');
-    //     gsap.to('.right-item', { rotateY: '90deg', opacity: 0, duration: 1, delay: 1 })
-    //   })
-    // },
     // 左下角资源统计动画 - 地下资源进入 1500
     animateResourceBottomShow(){
       gsap.to('.bottom-item', { filter: 'blur(0)', opacity: 1, duration: 1.5 })

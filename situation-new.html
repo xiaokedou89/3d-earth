@@ -1,0 +1,3426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+    <link rel="preload" href="/assets/fonts/douyuFont-2.woff2" as="font" type="font/woff2" crossorigin>
+    <title>Z系统</title>
+    <script src="./js/theme.js"></script>
+    <script src="./js/resize.js"></script>
+    <link href="/assets/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="./css/homepage.css" rel="stylesheet" />
+    <!-- 引入地球组件相关样式 -->
+    <link href="./css/my-earth.css" rel="stylesheet" />
+    <link href="/assets/iconfont3/iconfont.css" rel="stylesheet" />
+    <style type="text/css">
+      uas-loading {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <uas-loading>
+        <!-- 全屏背景平铺(1) -->
+        <div class="earth-container">
+          <div class="loading" v-if="viewChanging"></div>
+          <!-- animateCloud -->
+          <div class="cloud">
+            <!-- 层级越高越在最底下 -->
+            <!-- <div class="cloud-level level-5">
+              <img class="cloud-image l5-center" src="./img/homepage/resituation/cloud6.png" />
+            </div>
+            <div class="cloud-level level-4">
+              <img class="cloud-image l4-center" src="./img/homepage/resituation/cloud3.png" />
+            </div> -->
+            <div class="cloud-level level-3">
+              <img class="cloud-image l3-left" src="./img/homepage/resituation/cloud1.png" />
+              <img class="cloud-image l3-center" src="./img/homepage/resituation/cloud4.png" />
+              <img class="cloud-image l3-right" src="./img/homepage/resituation/cloud5.png" />
+            </div>
+            <div class="cloud-level level-2">
+              <img class="cloud-image l2-center" src="./img/homepage/resituation/cloud8.png" />
+              <img class="cloud-image l2-right" src="./img/homepage/resituation/cloud10.png" />
+            </div>
+            <div class="cloud-level level-1">
+              <img class="cloud-image l1-center" src="./img/homepage/resituation/cloud9.png" />
+            </div>
+          </div>
+          <my-earth ref="earth" :datas="jumps" :line-colors="lineColors" :fly-line-colors="flyLineColors"></my-earth>
+          <earth-map ref="earthMap"></earth-map>
+        </div>
+        <!-- 顶部占位(3) -->
+        <div class="position-top">
+          <!-- 背景及中间的标题 -->
+          <div class="position-top-title">
+            <!-- <img class="position-top-title-icon" src="./img/homepage/main/main-top-title.svg" /> -->
+              <img src="./img/homepage/main/右.svg" style="height: 0.104166rem;margin-right: 25px;" />
+              <div style="font-size: 0.184166rem;font-family:'BIGTITLE Font';padding-top: 10px;" v-if="!isEditing" @dblclick="startEditing" >{{ editContent || 'Z系统' }}</div>
+              <el-input ref="input" v-else style="width: 300px;" v-model="editContent" @blur="saveEdit" @keyup.enter.native="saveEdit"></el-input>
+              <img src="./img/homepage/main/左.svg" style="height: 0.104166rem;margin-left: 25px;" />
+          </div>
+          <div class="position-top-between">
+            <!-- 左侧时间 -->
+            <!-- <h3 class="position-top-time">{{ deelHomeTimeFormat }}</h3> -->
+            <!-- <div class="situation-data">
+              <img :src="`./img/homepage/data/bg-${dateBg}.svg`" />
+              <el-date-picker :default-time="['00:00:00', '23:59:59']" @focus="datePickerFocus" @blur="datePickerBlur" v-model="topTimeRange" type="daterange" align="right" unlink-panels range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions" @change="timeRangeChange" value-format="timestamp"> </el-date-picker>
+              <el-tooltip placement="top" content="目前支持任务支撑态势的图表更新">
+                <i class="timer-pick-des"></i>
+              </el-tooltip>
+            </div> -->
+
+            <!-- 右侧按钮 -->
+            <div class="position-top-actions">
+              <!-- 进入工作台 -->
+              <div class="position-top-action enter" @click="linkToIndex">
+                <img class="position-top-action-bg" src="./img/homepage/main/enter-border.svg" />
+                <div class="position-top-action-inner">
+                  <img class="position-top-action-txt" src="./img/homepage/main/enter.svg" />
+                </div>
+              </div>
+              <!-- 退出 -->
+              <div class="position-top-action out" @click="quit">
+                <img class="position-top-action-bg" src="./img/homepage/main/out-border.svg" />
+                <div class="position-top-action-inner">
+                  <img class="position-top-action-txt" src="./img/homepage/main/out.svg" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 地球上方(3) -->
+        <div class="position-center-top" @mousewheel="positionTopWheel">
+          <!-- 地球的图例及控制板 -->
+          <div class="position-center-top-controls">
+            <!-- 飞线类型控制 -->
+            <div class="center-control-item">
+              <div class="center-control-item-line" :class="{active: item.flag}" v-for="(item, index) in lineColors" @click="clearFlyLine('lineType', item)">
+                <span class="line-label">{{ item.label }}</span>
+                <div class="line">
+                  <div class="line-inner" :style="{backgroundColor: getLineColor(item)}"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 地球控制面板 -->
+            <div class="center-earth-control">
+              <a class="earth-control-item" @click="changeRotation">
+                <i class="iconfont icon-diqiu"></i>
+                <span>{{ positionTop.earthRotation ? '暂停旋转' : '开启旋转' }}</span>
+              </a>
+              <a class="earth-control-item" @click="resetCamera">
+                <i class="iconfont icon-sijiaoxinxi1"></i>
+                <span>恢复视角</span>
+              </a>
+              <a class="earth-control-item" :class="{disabled: positionTop.isfocusDisabled}" @click="changeMode">
+                <i class="iconfont icon-icon_kongzhi"></i>
+                <span>{{ positionTop.isfocus ? '数据模式' : '专注模式' }}</span>
+              </a>
+            </div>
+            <!-- 地球控制面板 -->
+            <div class="center-earth-control">
+              <a class="earth-control-item" @click="changeLineMode">
+                <i class="iconfont" :class="{'icon-xuxian': !positionTop.isDashed, 'icon-shixian': positionTop.isDashed}"></i>
+                <span>{{ positionTop.isDashed ? '实线通道' : '虚线通道' }}</span>
+              </a>
+              <a class="earth-control-item" @click="closeMarkupPoint">
+                <i class="iconfont icon-dingwei1"></i>
+                <span>{{ positionTop.showMarkupPoint ? '关闭位点' : '开启位点' }}</span>
+              </a>
+              <a class="earth-control-item" @click="changeFlyLineSize">
+                <i class="iconfont icon-cuxixiantiao"></i>
+                <span>{{ getFlyLineSize }}</span>
+              </a>
+            </div>
+            <!-- 飞线状态控制 -->
+            <div class="center-control-item">
+              <div class="center-control-item-line" :class="{active: item.flag}" v-for="(item, index) in flyLineColors" @click="clearFlyLine('lineStatus', item)">
+                <span class="line-label">{{ item.label }}</span>
+                <div class="line">
+                  <!-- <div class="fly-line-inner" :style="{backgroundColor: getLineColor(item)}"></div> -->
+                  <div class="fly-line-inner" :style="{backgroundColor: getLineColor(item)}">
+                    <div class="fly-line-inner-content" :style="{backgroundColor: getLineColor(item)}"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 四个数据展示项 -->
+          <div class="center-top-item" v-for="(item, index) in currentView.centerTop" :key="index">
+            <div class="left">
+              <img :src="`./img/homepage/center-top/${currentView.imgPre}${index}.svg`" />
+            </div>
+            <div class="right">
+              <h3 class="right-value">
+                <div class="num-item-20" v-for="(num, ind) in formatNumsData(item.value, 1, 1).value" :key="ind"
+                  :class="{dot: num === '.'}">
+                  <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                    <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                  </div>
+                </div>
+                <span class="num-item-inner-item">{{ formatNumsData(item.value).unit }}</span>
+                <!-- <span class="num-item-inner-item" v-if="index === (centerTop.length - 1) || index === 1">%</span> -->
+              </h3>
+              <div class="right-label">{{ item.label }}</div>
+            </div>
+          </div>
+
+          <div class="position-center-top-track" v-show="positionTop.showTracks">
+            <div class="track-item" :class="{active: !positionTop.showControls}" @click="activeShowControls"></div>
+            <div class="track-item" :class="{active: positionTop.showControls}" @click="deactiveShowControls"></div>
+          </div>
+        </div>
+        <!-- 地球上方-视图切换面板 -->
+        <div class="position-center-top-bottom">
+          <div class="views-container" v-if="!isEarthMap">
+            <div class="views-button source" :class="{active: currentView.key === viewSource.key}" @click="showSourceView"></div>
+            <div class="views-button network" :class="{active: currentView.key === viewNetwork.key}" @click="showNetworkView">
+            </div>
+            <div class="views-button task" :class="{active: currentView.key === viewTask.key}" @click="showTaskView"></div>
+          </div>
+          <div v-else="isEarthMap" @click="animateUpToEarth">回退到地球</div>
+        </div>
+        <!-- 地球下方(3) -->
+        <div class="position-center-bottom">
+          <img src="./assets/earth/bottomBg.svg" />
+          <div class="circle-outer">
+            <div class="map-enter enter0" @click="animateDownInEarthMap">801</div>
+            <div class="map-enter enter1" @click="animateDownInEarthMap">803</div>
+            <div class="map-enter enter2" @click="animateDownInEarthMap">812</div>
+            <div class="map-enter enter3" @click="animateDownInEarthMap">805</div>
+            <div class="map-enter enter4" @click="animateDownInEarthMap">804</div>
+            <div class="map-enter enter5" @click="animateDownInEarthMap">802</div>
+            <svg class="path-svg" viewBox="0 0 800 400" preserveAspectRatio="none">
+              <path id="ellipsePath" d="M0,200 A400,200 0 1,1 0,200.1 Z" />
+            </svg>
+            <!-- <div class="ball ball1">1</div>
+            <div class="ball ball2">2</div>
+            <div class="ball ball3">3</div>
+            <div class="ball ball4">4</div>
+            <div class="ball ball5">5</div>
+            <div class="ball ball6">6</div>
+            <div class="ball ball7">7</div>
+            <div class="ball ball8">8</div>
+            <div class="ball ball9">9</div> -->
+            <div class="ball" 
+              v-for="(item, index) in balls"
+              :class="[`ball${index+1}`, {active: currentBall && currentBall.type === item.type}]"
+              :style="{backgroundImage: computedBallBg(item), opacity: ballPoints[index].opacity}"
+              :key="index"  
+              @click="clickBall(item)"
+            >
+              <!-- `url('./img/homepage/resituation/source-ball-${item.type}.svg')` -->
+            </div>
+          </div>
+          <!-- 支撑态势标题 -->
+          <!-- <div class="position-title">
+            <img class="position-title-content" src="./img/homepage/support/title.svg" />
+          </div> -->
+          <!-- 支撑态势 -->
+          <!-- <div class="support-section" id="support-chart"></div> -->
+        </div>
+        <!-- 左下(3) -->
+        <div class="position-left">
+          <!-- 左侧非任务视图 -->
+          <div class="position-animate-container" v-show="!currentView || (currentView && currentView.key !== viewTask.key)">
+            <div class="outer-container wh100">
+              <div class="inner-container ">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="left-section">
+                  <div class="position-title">
+                    <div class="position-title-content text">安全监测</div>
+                  </div>
+                  <!-- 安全监测 -->
+                  <div class="safe-monitor">
+                    <div class="content">
+                      <div class="left">
+                        <div class="label">健康</div>
+                        <div class="value">
+                          <div class="num-item-10" v-for="(num, ind) in formatNumsData(safeMonitor.scout, 1, 1).value" :key="ind"
+                            :class="{dot: num === '.'}">
+                            <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                              <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                            </div>
+                          </div>
+                          <span>分</span>
+                        </div>
+                      </div>
+                      <ul class="right">
+                        <li class="right-item">
+                          节点加固指数 
+                          <div class="item-nums blue">
+                            <div class="num-item-10" v-for="(num, ind) in formatNumsData(safeMonitor.indexs.node, 1, 1).value" :key="ind"
+                              :class="{dot: num === '.'}">
+                              <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="right-item">
+                          网络防御指数 
+                          <div class="item-nums green">
+                            <div class="num-item-10" v-for="(num, ind) in formatNumsData(safeMonitor.indexs.defense, 1, 1).value" :key="ind"
+                              :class="{dot: num === '.'}">
+                              <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="right-item">
+                          联动处置指数 
+                          <div class="item-nums yellow">
+                            <div class="num-item-10" v-for="(num, ind) in formatNumsData(safeMonitor.indexs.linkage, 1, 1).value" :key="ind"
+                              :class="{dot: num === '.'}">
+                              <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <!-- 安全告警降噪 -->
+                  <div class="position-title">
+                    <div class="position-title-content text">安全告警降噪</div>
+                  </div>
+                  <div class="safe-warning">
+                    <div class="content"></div>
+                  </div>
+                  <!-- 安全战技战术 -->
+                  <div class="position-title">
+                    <div class="position-title-content text">安全战技战术</div>
+                  </div>
+                  <div class="safe-strategy">
+                    <div class="safe-strategy-row" v-for="(row, rowIndex) in safeStrategy" :key="rowIndex">
+                      <div class="safe-strategy-col" :class="{none: !col.show}" v-for="(col, colIndex) in row.cols" :key="colIndex">
+                        <div class="label" v-if="col.show">{{ col.label }}</div>
+                        <!-- <div class="value" v-if="col.show">{{ col.value }}</div> -->
+                         <div class="value" v-if="col.show">
+                          <div class="num-item-10" v-for="(num, ind) in formatNumsData(col.value, 1, 1).value" :key="ind" :class="{dot: num === '.'}">
+                            <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                              <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                            </div>
+                          </div>
+                          <span>{{ formatNumsData(col.value, 1, 1).unit }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 安全加固 -->
+                  <div class="position-title">
+                    <div class="position-title-content text">安全风险加固</div>
+                  </div>
+                  <div class="safe-reinforce-container">
+                    <div class="safe-reinforce-top">
+                      <div class="safe-reinforce-item">
+                        <div class="icon">
+                          <img src="./img/homepage/reinforce/item-icon0.svg" />
+                        </div>
+                        <div class="content">
+                          <div class="label">漏洞修复率 <span class="safe-rate">{{ safeReinforce.bug.rate }}%</span></div>
+                          <h3 class="number-font">
+                            <div class="num-item-16" v-for="(num, index) in formatNumsData(safeReinforce.bug.count).value" :key="index"
+                              :class="{dot: num === '.'}">
+                              <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                              </div>
+                            </div>
+                            <span class="unit">{{formatNumsData(safeReinforce.bug.count).unit}}个</span>
+                          </h3>
+                        </div>
+                      </div>
+                      <div class="safe-reinforce-item">
+                        <div class="icon">
+                          <img src="./img/homepage/reinforce/item-icon1.svg" />
+                        </div>
+                        <div class="content">
+                          <div class="label">配置加固率 <span class="safe-rate">{{ safeReinforce.config.rate }}%</span></div>
+                          <h3 class="number-font">
+                            <div class="num-item-16" v-for="(num, index) in formatNumsData(safeReinforce.config.count).value" :key="index"
+                              :class="{dot: num === '.'}">
+                              <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                              </div>
+                            </div>
+                            <span class="unit">{{formatNumsData(safeReinforce.config.count).unit}}个</span>
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- <div class="safe-reinforce-bottom right-section-common"> -->
+                    <div class="safe-reinforce-bottom">
+                      <div class="left" id="reinforce-pie-chart"></div>
+                      <div class="center"></div>
+                      <div class="right">
+                        <div class="reinforce-legend-item" :class="{close: item.legendFlag === false}"
+                          v-for="(item, index) in charts.safeReinforce.data" :key="index" @click="triggleSafeLegend(item)">
+                          <div class="left">
+                            <div class="icon-outer">
+                              <i class="icon" :style="{backgroundColor: pieChartColors[index]}"></i>
+                            </div>
+                            <div class="reinforce-legend-item-name">{{ item.labelName }}</div>
+                          </div>
+                          <div class="right">{{ item.rightRate === 1 ? item.rightRate * 100 : (item.rightRate * 100).toFixed(2) }}%</div>
+                        </div>
+                      </div></div>
+
+                  </div>
+                  <!-- 安全防御战报 -->
+                  <div class="position-title">
+                    <div class="position-title-content text">安全防御战报</div>
+                  </div>
+                  <div class="safe-defense">
+                    <div class="safe-defense-list" v-if="safeDefense.length > 0">
+                      <div class="safe-defense-item" :class="{hight: item.type === 2}" v-for="(item, index) in safeDefense" :key="index">
+                        <div class="left">
+                          <div class="left-item">
+                            <!-- <span class="level">{{  }}</span> -->
+                            <span class="attack">{{ item.attackIp || '未知地址' }}</span> 攻击 
+                            <span class="local">{{ item.localIp }}</span>
+                          </div>
+                          <div class="left-item">{{ item.content }}</div>
+                        </div>
+                        <div class="right">
+                          <div class="right-item">{{ computedTimeHeader(item.time) }}</div>
+                          <div class="right-item">{{ computedTimeBody(item.time) }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="safe-defense-empty" v-else>
+                      <img src="./img/homepage/watch/empty.svg" />
+                      <div class="empty-label">暂无数据</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 左侧任务视图 - 最外层使用position-animate-container -->
+          <div class="position-animate-container" v-show="currentView.key === viewTask.key">
+            <!-- 隔离域1 -->
+            <div class="outer-container selectable wh50">
+              <div class="inner-container task-inner">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="task-section">
+                  <div class="position-title">
+                    <div class="position-title-content text">XXTS隔离域001</div>
+                  </div>
+                  <div class="task-top">
+                    <div class="top">
+                      <div class="task-top-icon">
+                        <img src="./img/homepage/resituation/task-top-icon1.svg" />
+                      </div>
+                      <!-- 任务数量 -->
+                      <div class="task-total">
+                        <div class="value">
+                          <div class="num-item-20" v-for="(num, ind) in formatNumsData(tasks.task1.taskTotal, 1, 1).value" :key="ind"
+                            :class="{dot: num === '.'}">
+                            <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                              <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                            </div>
+                          </div>
+                          <span class="num-item-inner-item">{{ formatNumsData(tasks.task1.taskTotal).unit }}</span>
+                          <span class="unit">个</span>
+                        </div>
+                        <div class="label">任务用量</div>
+                      </div>
+                      <div class="task-speed-chart"></div>
+                    </div>
+                    <div class="bottom"></div>
+                  </div>
+                  <div class="task-bottom"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 隔离域2 -->
+            <div class="outer-container selectable wh50">
+              <div class="inner-container task-inner">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="task-section"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 右下(3) -->
+        <div class="position-right">
+          <!-- 右侧非任务视图 -->
+          <div class="position-animate-container" v-show="!currentView || (currentView && currentView.key !== viewTask.key)">
+            <div class="outer-container wh100">
+              <div class="inner-container">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="right-section">
+                  <div class="position-title">
+                    <div class="position-title-content text">系统状态</div>
+                  </div>
+                  <!-- 系统状态选择部分 -->
+                  <div class="system-select-container">
+                    <el-radio v-model="currentSystem" class="system-radio" v-for="(item, index) in systems" :key="index" :label="item.key" :value="item.key">
+                      <div class="system-item">
+                        <div class="top">{{ item.title }}</div>
+                        <div class="bottom">
+                          <div class="system-item-content">
+                            <div class="icon" :class="[`icon${index + 1}`]"></div>
+                            <div class="content">
+                              <div class="content-item">
+                                <div class="label">正常</div>
+                                <div class="value normal">
+                                  <div class="num-item-12" v-for="(num, ind) in formatNumsData(item.counts.normal, 1, 1).value" :key="ind"
+                                    :class="{dot: num === '.'}">
+                                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="content-item">
+                                <div class="label">异常</div>
+                                <div class="value wrong">
+                                  <div class="num-item-12" v-for="(num, ind) in formatNumsData(item.counts.wrong, 1, 1).value" :key="ind"
+                                    :class="{dot: num === '.'}">
+                                    <div class="num-item-inner" :data-height="num" v-if="num !== '.'">
+                                      <div class="num-item-inner-item" v-for="n in 10">{{ n - 1 }}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="system-item-warning" :class="{warning: item.warning}">
+                            <i class="warning-icon"></i>
+                            <span>{{ item.warning || '无异常' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </el-radio>
+                  </div>
+                  <!-- 巡检标题 -->
+                  <div class="right-title">
+                    <div class="inner">
+                      <div class="left">
+                        <i class="inspection-icon"></i>
+                        <span class="inspection-label">最后一次巡检时间：</span>
+                        <span class="inspection-time">{{ new Date(inspection.time).toLocaleString() }}</span>
+                      </div>
+                      <div class="right">
+                        <i class="inspection-res-icon"></i>
+                        <span>{{ inspection.result }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="s2">
+                    <!-- 硬件设施的统计表格 -->
+                    <iframe
+                      :src="computedTest"
+                      style="width: 100%; height: 100%; border: none!important;"></iframe>
+                  </div>
+                  <div class="position-title">
+                    <div class="position-title-content text">服务状态</div>
+                  </div>
+                  <div class="s3"></div>
+                  <div class="position-title">
+                    <div class="position-title-content text">故障告警</div>
+                  </div>
+                  <!-- 故障告警 -->
+                  <div class="fault-warning">
+                    <div class="fault-warning-list" v-if="faults.length > 0">
+                      <div class="fault-warning-item" v-for="(item, index) in faults" :key="index">
+                        <div class="header">
+                          <i class="icon"></i>
+                        </div>
+                        <div class="content">{{ item.content }}</div>
+                      </div>
+                    </div>
+                    <div class="fault-warning-empty" v-else>
+                      <img src="./img/homepage/watch/empty.svg" />
+                      <div class="empty-label">暂无数据</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 右侧任务视图 - 最外层使用position-animate-container-->
+          <div class="position-animate-container" v-show="currentView.key === viewTask.key">
+            <!-- 隔离域1 -->
+            <div class="outer-container selectable wh50">
+              <div class="inner-container task-inner">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="task-section"></div>
+              </div>
+            </div>
+            <!-- 隔离域2 -->
+            <div class="outer-container selectable wh50">
+              <div class="inner-container task-inner">
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+                <div class="task-section"></div>
+              </div>
+            </div>
+          </div>
+        </div> 
+      </uas-loading>
+    </div>
+    <script src="./js/dict.js"></script>
+    <script src="/assets/js/vue.js"></script>
+    <script src="./js/day.js"></script>
+    <script src="/assets/element-ui/index.js"></script>
+    <script src="/assets/js/axios.min.js"></script>
+    <script src="/assets/vue-echarts/echarts@5.1.2.js"></script>
+    <script src="/static/js/name.js"></script>
+    <script src="/static/js/sysname.js"></script>
+    <script src="js/zapi.js"></script>
+    <script src="js/captcha.js"></script>
+    <script src="js/chartsGL.js"></script>
+    <script src="./assets/js/lodash@4.17.21.js"></script>
+    <!-- 引入地球相关依赖 -->
+    <script src="./assets/js/three/build/three.js"></script>
+    <script src="./assets/js/three/build/OrbitControls.js"></script>
+    <script src="./assets/js/three/build/EffectComposer.js"></script>
+    <script src="./assets/js/three/build/OutlinePass.js"></script>
+    <script src="./assets/js/three/build/RenderPass.js"></script>
+    <script src="./assets/js/three/build/CopyShader.js"></script>
+    <script src="./assets/js/three/build/ShaderPass.js"></script>
+    <script src="./assets/js/three/build/LuminosityHighPassShader.js"></script>
+    <script src="./assets/js/three/build/UnrealBloomPass.js"></script>
+    <script src="./assets/js/three/build/GLTFLoader.js"></script>
+    <script src="./assets/js/three/build/CSS2DRenderer.js"></script>
+    <script src="./assets/js/three/build/CSS3DRenderer.js"></script>
+    <script src="./assets/js/three/build/SMAAShader.js"></script>
+    <script src="./assets/js/three/build/SMAAPass.js"></script>
+    <script src="./assets/js/html2canvas.js"></script>
+    <script src="./assets/js/d3.min.js"></script>
+    <script src="./assets/js/tinycolor2.js"></script>
+    <script src="./assets/js/MotionPathPlugin.min.js"></script>
+    <script src="./assets/js/gsap.min.js"></script>
+    <script src="./js/earth.js"></script>
+    <script src="./js/view.js"></script>
+    <script src="./js/earth-map.js"></script>
+    <script>
+      // document.addEventListener("DOMContentLoaded", (event) => {
+      //   gsap.registerPlugin(MotionPathPlugin);
+      //   console.log('注册插件MotionPath完成')
+      // });
+      gsap.registerPlugin(MotionPathPlugin);
+      $api.Account.GetUserinfo(
+        function (d) {
+          $app.user = d;
+        },
+        function (err) {
+          $app.$notify({ title: '获取用户信息失败', message: err.data, type: 'error' });
+          window.location.href = 'login.html';
+        }
+      );
+      // 调用下钻地球后渲染地图的飞线数据
+      let flightData = [
+        { start: [91.1, 29.6], end: [116.4, 39.9] },
+        { start: [100.2, 25.5], end: [116.4, 39.9] },
+        { start: [126.5, 43.8], end: [116.4, 39.9] },
+        { start: [87.6, 43.7], end: [116.4, 39.9] },
+        { start: [111.6, 40.8], end: [116.4, 39.9] },
+        { start: [121.4, 31.2], end: [116.4, 39.9] },
+      ];
+      let chartColors = ['rgba(5, 253, 252, 1)', 'rgba(58, 137, 255, 1)', 'rgba(246, 255, 0, 1)', 'rgba(151, 235, 205, 1)', 'rgba(9, 187, 255, 1)', 'rgba(255, 204, 128, 1)', 'rgba(250, 145, 150, 1)', 'rgba(128, 188, 255, 1)'];
+      let linearChartColors = ['rgba(5, 253, 252, .5)', 'rgba(58, 137, 255, .5)', 'rgba(246, 255, 0, .5)', 'rgba(151, 235, 205, .5)', 'rgba(9, 187, 255, .5)', 'rgba(255, 204, 128, .5)', 'rgba(250, 145, 150, .5)', 'rgba(128, 188, 255, .5)'];
+      let transparentColors = ['rgba(5, 253, 252, 0)', 'rgba(58, 137, 255, 0)', 'rgba(246, 255, 0, 0)', 'rgba(151, 235, 205, 0)', 'rgba(9, 187, 255, 0)', 'rgba(255, 204, 128, 0)', 'rgba(250, 145, 150, 0)', 'rgba(128, 188, 255, 0)'];
+      // 资源分布折线图使用的颜色
+      let resourceLineChartColors = [ 'rgba(5,253,252, 1)', 'rgba(246, 255, 0, 1)'];
+      let resourceLineChartLinearColors = ['rgba(5,253,252, .5)', 'rgba(246, 255, 0, .5)'];
+      let resourceLineChartTransparentColors = ['rgba(5,253,252, 0)', 'rgba(246, 255, 0, 0)'];
+      // 安全加固饼图颜色
+      let pieChartColors = ['rgb(128,188,255)', 'rgb(162,225,249)', 'rgb(151,235,205)', 'rgb(186,225,179)', 'rgb(255,204,128)', 'rgb(250,145,150)']
+      // 转换echart图标的字体函数
+      function setChartSize(res) {
+        const clientWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        if (!clientWidth) return;
+        let fontSize = clientWidth / 1920;
+        return res * fontSize;
+      }
+      // 传输态势折线图默认配置项
+      // risk-top-section
+      let transferOption = {
+        // 总的背景色
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        color: chartColors,
+        // 全局字体样式
+        textStyle: {
+          color: '#868e97',
+          fontSize: setChartSize(14)
+        },
+        grid: {
+          // left: 35,
+          // top: 35,
+          // right: 20,
+          // bottom: 20,
+          left: setChartSize(20),
+          // top: setChartSize(35),
+          top: setChartSize(35),
+          right: setChartSize(20),
+          bottom: setChartSize(20),
+          containLabel: true,
+          backgroundColor: 'transparent'
+        },
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: 'rgba(24, 34, 107, .7)',
+          borderColor: 'rgba(50, 57, 103, 0.9)',
+          borderWidth: 1,
+          textStyle: {
+            color: '#ddeeff',
+            fontSize: setChartSize(14)
+          },
+          axisPointer: {
+            type: 'line', // 设置为线型指示器
+            lineStyle: {
+              type: 'dashed' // 线的类型，可以是 'solid', 'dashed', 或 'dotted'
+            }
+          }
+        },
+        legend: {
+          data: [],
+          // icon: 'circle',
+          // itemWidth: 8,
+          // itemHeight: 8,
+          // icon: 'roundRect',
+          icon: 'rect',
+          itemWidth: setChartSize(20),
+          itemHeight: setChartSize(2),
+          textStyle: {
+            fontSize: setChartSize(14),
+            color: '#868e97'
+          },
+          // top: setChartSize(0),
+          top: 0,
+          // right: 0
+          right: setChartSize(20)
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: [],
+          // x轴轴线刻度字
+          axisLabel: {
+            color: '#868e97',
+            // fontSize: 14,
+            fontSize: setChartSize(14),
+            margin: setChartSize(12)
+          },
+          // 背景刻度线
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        // yAxis.axisLabel.formatter
+        yAxis: {
+          type: 'value',
+          name: '单位: bps',
+          nameLocation: 'end',
+          nameTextStyle: {
+            padding: [0, 0, 0, 0], //间距分别是 上 右 下 左
+            align: 'left'
+          },
+          // splitLine: {
+          //   lineStyle: {
+          //     type: 'solid'
+          //   }
+          // },
+          // y轴轴线刻度字
+          axisLabel: {
+            // 设置格式
+            // formatter: '{(value / 1000).toFixed(0)}Kbps',
+            color: '#868e97',
+            fontSize: setChartSize(14),
+            margin: setChartSize(12)
+          },
+          // axisLine: {
+          // 	show: true
+          // },
+          // 背景刻度线
+          splitLine: {
+            show: true,
+            lineStyle: {
+              type: 'dashed',
+              color: '#868e97'
+            }
+          }
+        },
+        series: []
+      };
+      // 支撑态势的配置项
+      let supportOption = JSON.parse(JSON.stringify(transferOption));
+      supportOption.grid.bottom = setChartSize(0);
+      supportOption.xAxis.boundaryGap = setChartSize(20);
+      supportOption.yAxis = [
+        {
+          type: 'value',
+          name: '任务数量(个)',
+          nameLocation: 'end',
+          nameTextStyle: {
+            padding: [0, 0, 0, 0], //间距分别是 上 右 下 左
+            align: 'left'
+          },
+          splitLine: {
+            lineStyle: {
+              type: 'solid'
+            }
+          },
+          // y轴轴线刻度字
+          axisLabel: {
+            // 设置格式
+            // formatter: '{value}bps',
+            color: '#868e97',
+            fontSize: setChartSize(14),
+            margin: setChartSize(12)
+          },
+          axisLine: {
+            show: true
+          },
+          // 背景刻度线
+          splitLine: {
+            lineStyle: {
+              type: 'dashed',
+              color: '#868e97'
+            },
+            show: false
+          }
+        },
+        {
+          type: 'value',
+          name: '执行成功率(%)',
+          nameLocation: 'end',
+          nameTextStyle: {
+            padding: [0, 0, 0, 0], //间距分别是 上 右 下 左
+            align: 'right'
+          },
+          splitLine: {
+            lineStyle: {
+              type: 'solid'
+            }
+          },
+          // y轴轴线刻度字
+          axisLabel: {
+            // 设置格式
+            // formatter: '{value}bps',
+            color: '#868e97',
+            fontSize: setChartSize(14),
+            margin: setChartSize(12)
+          },
+          axisLine: {
+            show: true
+          },
+          // 背景刻度线
+          splitLine: {
+            lineStyle: {
+              type: 'dashed',
+              color: '#868e97'
+            }
+          }
+        }
+      ];
+      supportOption.legend = [
+        {
+          show: true,
+          orient: 'horizontal',
+          left: 'center',
+          top: 0,
+          align: 'auto',
+          backgroundColor: 'rgba(0,0,0,0)',
+          borderColor: '#ccc',
+          borderRadius: 0,
+          borderWidth: 0,
+          padding: setChartSize(5),
+          itemGap: setChartSize(10),
+          itemWidth: setChartSize(25),
+          itemHeight: setChartSize(14),
+          textStyle: {
+            color: '#868e97',
+            fontSize: setChartSize(14)
+          }
+          // symbolRotate: 'inherit',
+          // symbolKeepAspect: true,
+          // inactiveColor: '#ccc',
+          // inactiveBorderColor: '#ccc',
+          // inactiveBorderWidth: 'auto',
+        }
+      ];
+      // 安全加固的默认饼图配置
+      let defaultPieOption = {
+        backgroundColor: 'transparent',
+        grid: {
+          containLabel: true
+        },
+        legend: {
+          show: false,
+          data: [],
+          icon: 'roundRect',
+          orient: 'vertical',
+          right: setChartSize(30),
+          itemWidth: 20,
+          itemHeight: 12,
+          textStyle: {
+            fontSize: 14
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          confine: true,
+          // formatter(params){}
+          backgroundColor: 'rgba(24, 34, 107, .7)',
+          borderColor: 'rgba(50, 57, 103, 0.9)',
+          borderWidth: 1,
+          textStyle: {
+            color: '#ddeeff',
+            fontSize: setChartSize(14)
+          }
+        },
+        series: [{
+          type: 'pie',
+          // radius: ['16%', '28%'],
+          radius: ['30%', '75%'],
+          avoidLabelOverlap: true,
+          itemStyle: {
+            borderRadius: 2,
+            borderWidth: 3,
+            // borderColor: 'rgba(0, 0, 0, 0.8)'
+            borderColor: 'rgb(12, 16, 48)'
+          },
+          label: {
+            show: true,
+            color: '#fff',
+            fontSize: setChartSize(10),
+            position: 'outside',
+            // formatter: '{b}\n{d}%'
+            formatter: '{b}\n{c}个'
+          },
+          emphasis: {
+            disabled: false,
+            scale: false,
+            label: {
+              show: true
+            }
+          },
+          labelLine: {
+            show: true
+          },
+          data: []
+        }]
+      };
+
+      // 工具函数
+      function round(number, precision = 2) {
+        return Math.round(+number + "e" + precision) / Math.pow(10, precision);
+      }
+      // 默认的左下角资源统计的中间资源对象
+      let defaultResourceCenter = {
+        resourceType: undefined,
+        key: undefined,
+        count: undefined,
+        districtList: undefined,
+        staticCount: undefined,
+        dynamicCount: undefined,
+        districtCount: undefined,
+        protocolCount: undefined,
+        sourceCount: undefined
+      };
+      $app = new Vue({
+        el: '#app',
+        data() {
+          return {
+            // ====================> resituation
+            // 目前是否是展示中国地图模式 - 以此判断地球模式切换是否禁用
+            isEarthMap: false,
+            // 切换视图时的loading动画开关
+            viewChanging: false,
+            // 当前视图对象
+            currentView: null,
+            // 驱动云层动画的时间线
+            cloudTL: null,
+            // 进入时的默认视图 - 地球数据和网络视图一致
+            viewNow: {
+              key: 'now',
+              imgPre: 'ct',
+              centerTop: [
+                { label: '实时通道数量', value: '13820' },
+                { label: '实时网络负载', value: '1.52' },
+                { label: '实时任务数量', value: '236' },
+                { label: '实时任务支撑率', value: '532' }
+              ],
+              mapDatas: []
+            },
+            // 资源视图
+            viewSource: {
+              key: 'source',
+              imgPre: 'zy',
+              centerTop: [
+                { label: '资源类型', value: '893' },
+                { label: '节点数量', value: '23' },
+                { label: '覆盖地区', value: '86' },
+                { label: '补给渠道', value: '236' }
+              ],
+              mapDatas: [
+                { E: 121.564438, N: 25.037555, name: "台北市", type: 'bj', rank: 'middle' },
+                { E: -77.48727, N: 39.04364, name: "阿什本", type: 'wx', rank: 'small' },
+                { E: 104.058986, N: 30.676235, name: "成都市", type: 'yzj', rank: 'large' },
+                { E: 118.766351, N: 32.053245, name: "南京市", type: 'jc', rank: 'middle' },
+                { E: 121.019789, N: 14.472021, name: "帕拉尼亚克", type: 'zz', rank: 'small' },
+                { E: -119.417932, N: 36.778261, name: "加利福尼亚州", type: 'wlw', rank: 'large' },
+                { E: 100.506322, N: 13.761612, name: "曼谷", type: 'yzx', rank: 'middle' },
+                { E: 103.762593, N: 1.470747, name: "新山", type: 'jr', rank: 'small' },
+                { E: 90.402832, N: 23.715806, name: "达卡", type: 'nm', rank: 'large' },
+              ]
+            },
+            // 网络视图
+            viewNetwork: {
+              key: 'network',
+              imgPre: 'wl',
+              centerTop: [
+                { label: '通道架构', value: '13820' },
+                { label: '隐匿传输模式', value: '1.52' },
+                { label: '通道数量', value: '236' },
+                { label: '通道有效率', value: '532' }
+              ],
+              mapDatas: []
+            },
+            // 任务视图
+            viewTask: {
+              key: 'task',
+              imgPre: 'rw',
+              centerTop: [
+                { label: '业务模式', value: '23' },
+                { label: '分域分区', value: '56' },
+                { label: '任务数量', value: '678' },
+                { label: '任务支撑率', value: '98' }
+              ],
+              mapDatas: []
+            },
+            // 记录底下大圆盘上小球是否归拢
+            isBallsPosition: false,
+            // 当前选中激活的资源球
+            currentBall: null,
+            balls: [
+              { index: 1, type: 'nm', typeName: '匿名网络', tl: null, positionTL: null },
+              { index: 2, type: 'jr', typeName: '接入主机', tl: null, positionTL: null },
+              { index: 3, type: 'yzx', typeName: '云专线', tl: null, positionTL: null },
+              { index: 4, type: 'wlw', typeName: '物联网代理', tl: null, positionTL: null },
+              { index: 5, type: 'zz', typeName: '住宅代理', tl: null, positionTL: null },
+              { index: 6, type: 'jc', typeName: '机场代理', tl: null, positionTL: null },
+              { index: 7, type: 'yzj', typeName: '云主机', tl: null, positionTL: null },
+              { index: 8, type: 'wx', typeName: '卫星通讯', tl: null, positionTL: null },
+              { index: 9, type: 'bj', typeName: '边境无线', tl: null, positionTL: null }
+            ],
+            // 小球点位对应的样式
+            ballPoints: [
+              // 在椭圆左侧
+              { positionIndex: 0, opacity: 1, scale: 1 },
+              { positionIndex: 1, opacity: 1, scale: 1 },
+              { positionIndex: 2, opacity: 1, scale: 1 },
+              { positionIndex: 3, opacity: 1, scale: 1 },
+              { positionIndex: 4, opacity: 1, scale: 1 },
+              { positionIndex: 5, opacity: 1, scale: 1 },
+              { positionIndex: 6, opacity: 1, scale: 1 },
+              { positionIndex: 7, opacity: 1, scale: 1 },
+              { positionIndex: 8, opacity: 1, scale: 1 }
+              // { positionIndex: 0, opacity: 1, scale: 1 },
+              // { positionIndex: 1, opacity: 1 / 9, scale: 1 },
+              // { positionIndex: 2, opacity: 0, scale: 1 },
+              // { positionIndex: 3, opacity: 0, scale: 1 },
+              // { positionIndex: 4, opacity: 5 / 9, scale: 1 },
+              // { positionIndex: 5, opacity: 1, scale: 1 },
+              // { positionIndex: 6, opacity: 1, scale: 1 },
+              // { positionIndex: 7, opacity: 1, scale: 1 },
+              // { positionIndex: 8, opacity: 1, scale: 1 }
+            ],
+            // 小球聚拢状态下的位置，index => 从椭圆右顶点0.5的位置开始算: index * (半圈的进度为0.5 / (10段距离))
+            ballShowPoints: [
+              { positionIndex: 1, position: 0.5 + 1 * 0.5 / 10 },
+              { positionIndex: 2, position: 0.5 + 2 * 0.5 / 10 },
+              { positionIndex: 3, position: 0.5 + 3 * 0.5 / 10 },
+              { positionIndex: 4, position: 0.5 + 4 * 0.5 / 10 },
+              { positionIndex: 5, position: 0.5 + 5 * 0.5 / 10 },
+              { positionIndex: 6, position: 0.5 + 6 * 0.5 / 10 },
+              { positionIndex: 7, position: 0.5 + 7 * 0.5 / 10 },
+              { positionIndex: 8, position: 0.5 + 8 * 0.5 / 10 },
+              { positionIndex: 9, position: 0.5 + 9 * 0.5 / 10 },
+            ],
+            // 左侧 ======> 安全监测
+            safeMonitor: {
+              // 得分
+              scout: '100',
+              // 指数
+              indexs: {
+                node: '8.7',
+                defense: '8.6',
+                linkage: '9.1'
+              }
+            },
+            // 左侧 ======> 安全战技战术
+            safeStrategy: [
+              { row: 1, cols: [
+                { show: false },
+                { show: true, label: '初始访问', value: '851612' },
+                { show: true, label: '执行', value: '8169' },
+                { show: false },
+              ] },
+              { row: 2, cols: [
+                { show: true, label: '持久化', value: '15' },
+                { show: true, label: '权限提升', value: '3' },
+                { show: true, label: '防御绕过', value: '0' },
+                { show: true, label: '凭证获取', value: '0' },
+              ] },
+              { row: 3, cols: [
+                { show: true, label: '发现', value: '0' },
+                { show: true, label: '横向移动', value: '15' },
+                { show: true, label: '收集', value: '7' },
+                { show: true, label: '信息窃取', value: '0' },
+              ] },
+              { row: 4, cols: [
+                { show: true, label: '命令控制', value: '15' },
+                { show: true, label: '影响', value: '2' },
+                { show: true, label: '资源部署', value: '15' },
+                { show: true, label: '侦察', value: '1' },
+              ] },
+            ],
+            // 左侧 ======> 安全加固上方数据
+            safeReinforce: {
+              bug: {
+                count: '0',
+                rate: 0
+              },
+              config: {
+                count: '0',
+                rate: 0
+              }
+            },
+            // 左侧 ======> 安全防御
+            safeDefense: [
+              { attackIp: '10.136.1.122', localIp: '10.130.13.107', type: 0, content: '检测到HTTP_WebShell上传_疑似JSP_WebShell', time: 1779843662895 },
+              { attackIp: '10.136.1.122', localIp: '10.130.13.107', type: 2, content: '检测到HTTP_WebShell上传_疑似JSP_WebShell', time: 1779843662895 },
+              { attackIp: '10.136.1.122', localIp: '10.130.13.107', type: 1, content: '检测到HTTP_WebShell上传_疑似JSP_WebShell', time: 1779843662895 },
+              { attackIp: '10.136.1.122', localIp: '10.130.13.107', type: 2, content: '检测到HTTP_WebShell上传_疑似JSP_WebShell', time: 1779843662895 },
+            ],
+            // 右侧 ======> 系统状态选择数组
+            currentSystem: 1,
+            systems: [
+              {
+                title: '硬件设施',
+                key: 1,
+                counts: {
+                  normal: '200',
+                  wrong: '15'
+                },
+                warning: '硬件设施异常'
+              },
+              {
+                title: '软件环境',
+                key: 2,
+                counts: {
+                  normal: '23',
+                  wrong: '0'
+                },
+                warning: null
+              },
+              {
+                title: '系统组件',
+                key: 3,
+                counts: {
+                  normal: '34',
+                  wrong: '5'
+                },
+                warning: '系统组件异常'
+              },
+            ],
+            // 巡检的标题
+            inspection: {
+              time: Date.now(),
+              result: '正常'
+            },
+            // 故障告警列表
+            faults: [
+              { content: 'MySQL服务器  数据库服务器性能异常' },
+              { content: 'MySQL服务器  数据库服务器性能异常' },
+              { content: 'MySQL服务器  数据库服务器性能异常' },
+              { content: 'MySQL服务器  数据库服务器性能异常' },
+              { content: 'MySQL服务器  数据库服务器性能异常' },
+            ], 
+            // 选择的隔离域
+            selectTask: null,
+            // 任务面板数据
+            tasks: {
+              task1: {
+                title: 'XXTS隔离域001(M)',
+                igroup_id: 4,
+                // 选择时的地图飞线数据
+                mapDatas: [],
+                // 任务用量
+                taskTotal: '0',
+                // 最长持续
+                max_duration: '--',
+                // 平均持续
+                avg_duration: '--'
+              },
+              task2: {
+                title: 'XXTS隔离域001(R)',
+                igroup_id: 6,
+                // 选择时的地图飞线数据
+                mapDatas: [],
+                // 任务用量
+                taskTotal: '0',
+                // 最长持续
+                max_duration: '--',
+                // 平均持续
+                avg_duration: '--'
+              },
+              task3: {
+                title: 'XXTS隔离域001(T)',
+                igroup_id: 5,
+                // 选择时的地图飞线数据
+                mapDatas: [],
+                // 任务用量
+                taskTotal: '0',
+                // 最长持续
+                max_duration: '--',
+                // 平均持续
+                avg_duration: '--'
+              },
+              task4: {
+                title: 'XXTS隔离域001(M)',
+                igroup_id: 7,
+                // 选择时的地图飞线数据
+                mapDatas: [],
+                // 任务用量
+                taskTotal: '0',
+                // 最长持续
+                max_duration: '--',
+                // 平均持续
+                avg_duration: '--'
+              },
+            },
+            // <====================
+            isEditing:false,
+            editContent: '',
+            dateBg: 'default',
+            topTimeRange: '',
+            pickerOptions: {
+              shortcuts: [
+                {
+                  text: '今天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近2天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 1); // 减去一天
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近3天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 2); // 减去两天
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近7天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近15天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 15);
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近30天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                    picker.$emit('pick', [start, end]);
+                  }
+                },
+                {
+                  text: '最近90天',
+                  onClick(picker) {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                    picker.$emit('pick', [start, end]);
+                  }
+                }
+              ]
+            },
+            // 地球上方部分的控制对象
+            positionTop: {
+              isfocusDisabled: false,
+              // 是否正在动画
+              animating: false,
+              // 是否显示控制器
+              showControls: false,
+              showTracks: false,
+              // 顶部动画时间线对象
+              tl: null,
+              // 地球旋转控制
+              earthRotation: false,
+              // 是否专注模式
+              isfocus: false,
+              // 是否切换飞线为虚线
+              isDashed: false,
+              // 关闭 / 开启起点终点的光柱
+              showMarkupPoint: true,
+              // 飞线的初始大小
+              flyLineSize: 2
+            },
+            // 地球飞线的颜色
+            // position-center-bottom-top
+            lineColors: {
+              xxts: {
+                label: '信息投送',
+                key: 'xxts',
+                value: '#0dffff',
+                flag: true
+              },
+              sjhc: {
+                label: '数据回传',
+                key: 'sjhc',
+                value: '#ff7714',
+                flag: true
+              },
+              zlkz: {
+                label: '指令控制',
+                key: 'zlkz',
+                value: '#ffffff',
+                flag: true
+              }
+            },
+            flyLineColors: {
+              tc: {
+                label: '通畅',
+                key: 'tc',
+                value: '#32ed6a',
+                flag: true
+              },
+              yj: {
+                label: '拥挤',
+                key: 'yj',
+                value: '#ffcc00',
+                flag: true
+              },
+              zd: {
+                label: '中断',
+                key: 'zd',
+                value: '#ff4747',
+                flag: true
+              }
+            },
+            updateTimer: null,
+            // homeTime: '2025-05-28 16:57:19',
+            homeTime: Date.now(),
+            // 获取的地球上的跳转数据
+            jumps: [],
+            transfer: {
+              counts: {
+                sjhc: '0',
+                sjhcUnit: '',
+                zlkz: '0',
+                xxts: '0'
+              }
+            },
+            // echarts图表相关数据
+            charts: {
+              // 资源分布折线图
+              distributionLine: {
+                chart: null
+              },
+              // 安全加固饼图
+              safeReinforce: {
+                data: [],
+                chart: null
+              },
+              // 安全风险顶部图表
+              safeRiskTop: {
+                chart: null
+              },
+              // 传输态势
+              transfer: {
+                // 请求参数
+                params: {
+                  tag_regex: 'abc',
+                  group_by: 'label',
+                  traffic_type: 'input',
+                  start_time: null,
+                  end_time: null
+                },
+                chart: null
+              },
+              // 支撑态势
+              support: {
+                chart: null
+              }
+            }
+          };
+        },
+        components: {
+          'my-earth': MyEarth,
+          'earth-map': EarthMap
+        },
+        created() {
+          $app = this;
+          // 初始时设置当前视图为初始视图
+          this.currentView = this.viewNow;
+          $api.situation.getSourceView({},function (res){
+            console.log('资源视图数据')
+            console.log(res)
+          })
+          $api.situation.getNetworkView({}, function (res) {
+            console.log('网络视图数据')
+            console.log(res)
+          })
+          $api.situation.getTaskView({}, function (res) {
+            console.log('任务视图数据')
+            console.log(res)
+          })
+
+          // $api.Account.GetUserinfo(async function (user) {
+          //   console.log('尝试先获取用户信息')
+          //   console.log(user)
+          //   let igroupDatas = [];
+          //   const datas = (await $app.getIgroup(user.id)) || { igroup_data: [] };
+          //   console.log('获取隔离域组')
+          //   console.log(datas)
+          // }, function (err) {
+          //   if (err.data == '没有权限' || err.status == 403) window.location.href = 'login.html';
+          //   else if (!window.$app) {
+          //     let h1 = document.createElement('h1');
+          //     h1.innerHTML = '<div style="text-align: center;line-height: 200px;">' + err + '</div>';
+          //     document.body.appendChild(h1);
+          //   }
+          // })
+          this.getIgroupTransport(4);
+          this.queryIgroupStatisticInfo(4)
+        },
+        mounted() {
+          this.initIgroupDatas(4)
+          this.init();
+          // $app.updateTimer = setInterval(this.update, 10000);
+          window.addEventListener('resize', $app.resize);
+          // // 驱动地球上方数字滚动动画
+          // this.animateNumberItemInner('.position-center-top');
+          // 从缓存里面读取标题
+          this.editContent = localStorage.getItem('editContent') || ''
+
+          window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('sessionData');
+
+            if (encodedData) {
+              try {
+                const jsonStr = decodeURIComponent(atob(encodedData));
+                const data = JSON.parse(jsonStr);
+                
+                // 写入 sessionStorage
+                for (const [key, value] of Object.entries(data)) {
+                  sessionStorage.setItem(key, value);
+                }
+                 
+              } catch (e) {
+                console.warn('Failed to restore sessionStorage from URL:', e);
+              }
+            }
+          });
+        },
+        beforeDestroy() {
+          window.removeEventListener('resize', $app.resize);
+          $app.updateTimer && clearInterval($app.updateTimer);
+        },
+        computed: {
+          deelHomeTimeFormat() {
+            return new Date(this.homeTime).toLocaleString();
+          },
+          // 地球上方图例返回线的颜色
+          getLineColor() {
+            return function (item) {
+              return item.flag ? item.value : '#ccc';
+            };
+          },
+          // 获取地球的飞线大小对应文字
+          getFlyLineSize() {
+            let sizeLabel = '小';
+            if (this.positionTop.flyLineSize === 1) {
+              sizeLabel = '飞线-小';
+            } else if (this.positionTop.flyLineSize === 2) {
+              sizeLabel = '飞线-中';
+            } else {
+              sizeLabel = '飞线-大';
+            }
+            return sizeLabel;
+          },
+          // 获取资源小球的背景图
+          computedBallBg(){
+            return function (item){
+              return $app.currentBall && $app.currentBall.type === item.type ? `url('./img/homepage/resituation/source-ball-${item.type}-ac.svg')` : `url('./img/homepage/resituation/source-ball-${item.type}.svg')`;
+            }
+          },
+          // 获取时间头部年-月-日
+          computedTimeHeader(){
+            return function (time){
+              let timeHeader = '';
+              if (time){
+                let timer = new Date(time);
+                let year = timer.getFullYear();
+                let month = timer.getMonth() + 1;
+                let day = timer.getDate();
+                timeHeader = `${year}-${month}-${day}`;
+              }
+              return timeHeader;
+            }
+          },
+          // 获取时间部分时:分:秒
+          computedTimeBody(){
+            return function (time){
+              let timeBody = '';
+              if (time) {
+                let timer = new Date(time);
+                let hour = `${timer.getHours()}`.padStart(2, '0');
+                let min = `${timer.getMinutes()}`.padStart(2, '0');
+                let sec = `${timer.getSeconds()}`.padStart(2, '0');
+                timeBody = `${hour}:${min}:${sec}`;
+              }
+              return timeBody;
+            }
+          },
+          iframeSrc(){
+            return window.BaseURL.proxyServices;  
+          },
+          computedTest(){
+            return `${this.iframeSrc}/d-solo/HOME-EARTH/e5a4a7-e5b18f-e58fb3-e4bea7-e79c8b-e69dbf?orgId=1&from=1779956545434&to=1779960145434&timezone=browser&var-db=z_v04_2604&var-project=api_log&var-server_ip=$__all&var-server_ip_old=$__all&var-domain=$__all&var-status=1%3D1&var-uri=%2Fapi%2Fc%2Forder%2Fresult&var-cip=172.20.5.254&var-cal_interval=60&var-datasource=bffru6y51rg8wa&refresh=5m&tab=queries&panelId=206&__feature.dashboardSceneSolo`;
+          }
+        },
+        methods: {
+          initIgroupDatas(igroup_id){
+            Object.entries(this.tasks).forEach(([taskKey, task]) => {
+              let taskGroupId = task.igroup_id;
+              $api.transferSituation.igroupTransport(
+                { params: { igroup_id:  taskGroupId } },
+                function (res){
+                  if (res.code === 200 && res.data) {
+                    $app.tasks[taskKey].max_duration = res.data.max_duration ? $app.overviewFormatTime(res.data.max_duration) : '--';
+                    $app.tasks[taskKey].avg_duration = res.data.avg_duration ? $app.overviewFormatTime(res.data.avg_duration) : '--';
+                    $app.tasks[taskKey].taskTotal = res.data.count ? `${res.data.count}` : '0';
+                    console.log(taskKey)
+                    console.log($app.tasks[taskKey])
+                  }
+                },
+                function (err){
+                  console.log(err)
+                }
+              );
+            })
+            
+          },
+          // 隔离域数据拉取1
+          // $api.transferSituation.igroupTransport
+          // 隔离组数据2
+          // $api.isolation.getIgroupStatisticInfo
+          // 传输速率 type: 上行 input; 下行 output
+          // $api.transferSituation.getTransportRate
+          getIgroupTransport(igroup_id) {
+            return new Promise((resolve, reject) => {
+              $api.transferSituation.igroupTransport(
+                { params: { igroup_id } },
+                res => {
+                  // console.log('隔离与数据1')
+                  // console.log(res)
+                  const { code, data } = res;
+                  if (code === 200 && data) {
+                    return resolve(data);
+                  }
+                  return resolve({ count: 0, avg_duration: 0, max_duration: 0 });
+                },
+                err => {
+                  reject(err);
+                }
+              );
+            });
+          },
+          // 隔离域数据拉取
+          queryIgroupStatisticInfo(igroup_id) {
+            return new Promise((resolve, reject) => {
+              $api.isolation.getIgroupStatisticInfo(
+                { params: { igroup_id } },
+                (res) => {
+                  // console.log('隔离与数据2')
+                  // console.log(res)
+                  const { code, data, msg } = res;
+                  if (code === 200 && data) {
+                    resolve(data);
+                  } else {
+                    resolve({})
+                  }
+                },
+                (err) => {
+                  console.error(err);
+                  reject(err);
+                },
+                () => { }
+              );
+            })
+          },
+
+          startEditing(){
+            this.isEditing = true;
+            this.$nextTick(()=>{
+              this.$refs.input.focus()
+            })
+          },
+          saveEdit(){ 
+            this.isEditing = false;
+            localStorage.setItem('editContent',this.editContent)
+          },
+          timeRangeChange(val) {
+            // 筛选支持态势图表数据
+            // this.getSupport(true); 
+          },
+          test(e) {
+            // this.$refs.earth.clearAllDatas();
+
+            // 当切换isEarthMap时调用
+            // let positionTopBottom = document.querySelector('.position-center-top-bottom')
+            // positionTopBottom.style.opacity = 0;
+            // this.isEarthMap = !this.isEarthMap;
+            // gsap.fromTo('.position-center-top-bottom', { opacity: 0 }, { opacity: 1, duration: 0.8});
+
+            // 地球下钻
+            // this.animateDownInEarthMap();
+            // 任务视图飞跃点
+            // this.animateFlyToPoint({ N: 116.4074, E: 39.9042 });
+            // 
+          },  
+          ttt(){
+            // 地球上窜
+            // this.animateUpToEarth()
+            // 驱动小球恢复旋转
+            this.animateBallsRotate();
+          },
+          render() {
+            /*
+						
+						*/
+            this.$refs.earth.renderDatas([
+              {
+                startArray: {
+                  name: '杭州',
+                  N: 30.246026,
+                  E: 120.210792
+                },
+                endArray: [
+                  {
+                    name: '曼谷',
+                    N: 22, //维度
+                    E: 100.49074172973633, //经度
+                    label: 'xxts',
+                    status: 'tc'
+                  }
+                ]
+              }
+            ]);
+          },
+          // ============> 工具函数
+          // 隔离域计算最长持续、平均持续秒自动转换
+          overviewFormatTime(seconds) {
+            if (seconds < 60) {
+              const _seconds = _.round(seconds, 1);
+              return `${_seconds}秒`;
+            }
+
+            if (seconds < 3600) {
+              const _m = seconds / 60;
+              const minutes = _.round(_m, 1);
+              return `${minutes}分钟`;
+            }
+
+            if (seconds < 86400) {
+              const _h = seconds / 3600;
+              const hours = _.round(_h, 1);
+              return `${hours}小时`;
+            }
+
+            const _d = seconds / 86400;
+            const days = _.round(_d, 1);
+            return `${days}天`;
+          },
+          // 地球左下角资源统计 - 中间选择资源时是否展示该资源对象的条目判断
+          resourceSelectIsShow(key){
+            let notShow = ['resourceType', 'key'];
+            return !notShow.includes(key);
+          },
+          // 地球左下角资源统计 - 计算回显展示的key中文名称
+          computedResourceSelectLabel(key){
+            // resourceShowLabels
+            let findLabel = $app.resourceStatis.resourceShowLabels.find(item => item.value === key);
+            if (findLabel){
+              return findLabel.label ? findLabel.label : '';
+            } else {
+              return '';
+            }
+          },
+          // 地球左下角资源统计 - 计算回显展示的值
+          computedResourceSelectValue(value){
+            if (value !== null && value !== undefined){
+              return Array.isArray(value) && value.length > 0 ? value[0] : value;
+            } else {
+              return '--';
+            }
+          },
+          // 工具函数 - 转换图表的流量数据单位
+          formatBytesData(value, fixed = 0) {
+            const units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'B'];
+            let index = 0;
+            while (value >= 1000 && index < units.length - 1) {
+              value /= 1000;
+              index++;
+            }
+            return { value: value.toFixed(fixed), unit: units[index] };
+          },
+          // 工具函数 - 转换普通数字数据单位
+          formatNumsData(value, fixed = 1, floatFixed = 1) {
+            let num = +value;
+            const units = ['', '万', '亿', '兆'];
+            let index = 0;
+            while (num >= 10000 && index < units.length - 1) {
+              num /= 10000;
+              index++;
+            }
+            let result = 0;
+            if (index > 0) {
+              result = num.toFixed(fixed);
+            } else {
+              if (parseInt(num) === num){
+                result = num.toFixed(0);
+              } else {
+                result = num.toFixed(floatFixed)
+              }
+            }
+            return {
+              // value: index > 0 ? num.toFixed(fixed) : num.toFixed(0),
+              value: result,
+              unit: units[index]
+            };
+          },
+          formatNumsUnit(value, fixed = 1){
+            let num = +value;
+            let unit = '';
+            let result = 0;
+            if (num < 10000) {
+              result = num + '';
+            } else if (num >= 10000 && num < 10000 * 1000){
+              num /= 10000;
+              result = num.toFixed(fixed);
+              unit = '万';
+            } else if (num >= 1000 * 10000 && num < 10000 * 10000){
+              num /= 10000 * 1000;
+              result = num.toFixed(fixed);
+              unit = '千万';
+            } else if (num >= 10000 * 10000 && num < 10000 * 10000 * 1000){
+              num /= 10000 * 10000;
+              result = num.toFixed(fixed);
+              unit = '亿';
+            } else if (num >= 1000 * 10000 * 1000 && num < 10000 * 10000 * 10000) {
+              num /= 10000 * 10000 * 1000;
+              result = num.toFixed(fixed);
+              unit = '千亿';
+            } else if (num >= 10000 * 10000 * 10000){
+              num /= 10000 * 10000 * 10000;
+              result = num.tiFixed(fixed);
+              unit = '兆';
+            }
+            return {
+              value: result,
+              unit
+            }
+          },
+          // 工具函数 - 处理bps传输速率
+          deelTransferRatio(ratio) {
+            let res = ratio && !Number.isNaN(+ratio) ? ratio : 0;
+            if (res < 1000) {
+              res = res.toFixed(2);
+            } else if (res >= 1000 && res < 1000 * 1000) {
+              res = `${(res / 1000).toFixed(2)}K`;
+            } else if (res >= 1000 * 1000 && res < 1000 * 1000 * 1000) {
+              res = `${(res / (1000 * 1000)).toFixed(2)}M`;
+            } else if (res >= 1000 * 1000 * 1000) {
+              res = `${(res / (1000 * 1000)).toFixed(2)}G`;
+            }
+            return res;
+          },
+          // 工具函数 - 所有图表的重置大小注册事件
+          resize() {
+            for (let chartKey in $app.$data.charts) {
+              if ($app.$data.charts[chartKey] && $app.$data.charts[chartKey].chart && $app.$data.charts[chartKey].chart.resize) {
+                $app.$data.charts[chartKey].chart.resize();
+              }
+            }
+          },
+          // 工具函数 - 初始化或修改图表
+          setCharts(dataChartKey, chartId, option) {
+            if (this.charts[dataChartKey].chart) {
+              this.charts[dataChartKey].chart.setOption(option);
+            } else {
+              let dom = document.getElementById(chartId);
+              this.charts[dataChartKey].chart = echarts.init(dom);
+              this.charts[dataChartKey].chart.setOption(option);
+            }
+          },
+          // ============> 动画函数
+          // 进入页面的初始化动画
+          enterAnimate() {
+            this.positionTop.isfocusDisabled = true;
+            gsap.fromTo('.position-right', { right: '-25.78%', opacity: 0 }, { right: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out', delay: 1.5 });
+            gsap.fromTo('.position-center-bottom', { bottom: '-1.27604rem', opacity: 0 }, { bottom: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out', delay: 1.5 });
+            gsap.fromTo(
+              '.position-left',
+              { left: '-25.78%', opacity: 0 },
+              {
+                left: '0.0833rem',
+                opacity: 1,
+                duration: 2,
+                ease: 'expo.out',
+                delay: 1.5,
+                onComplete() {
+                  gsap.fromTo('.position-center-top-bottom', { opacity: 0 }, { opacity: 1, duration: 0.5})
+                  // $app.animateNumberItemInner('.left-section');
+                  $app.animateNumberItemInner('.position-left');
+                  $app.animateNumberItemInner('.right-section');
+                  // 驱动地球上方数字滚动动画
+                  $app.animateNumberItemInner('.position-center-top');
+                  $app.positionTop.showTracks = true;
+                  $app.positionTop.isfocusDisabled = false;
+                }
+              }
+            );
+            gsap.fromTo('.center-top-item', { rotateY: '90deg' }, { rotateY: '0deg', duration: 2, ease: 'expo.out', delay: 1.5 });
+          },
+          leaveAnimate(action) {
+            this.positionTop.isfocusDisabled = true;
+            $app.positionTop.showTracks = false;
+            gsap.fromTo('.position-center-top-bottom', { opacity: 1 }, { opacity: 0, duraiton: 0.5, onComplete(){
+              gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
+              gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 1, ease: 'expo.out' });
+              gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, { left: '-25.78%', opacity: 0, duration: 1, ease: 'expo.out' });
+              if (!$app.positionTop.showControls) {
+                gsap.fromTo('.center-top-item', { rotateY: '0deg' }, {
+                  rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete() {
+                    action()
+                  }
+                });
+              } else {
+                gsap.fromTo('.center-control-item', { rotateY: '0deg' }, { rotateY: '90deg', duration: 1, ease: 'expo.out' });
+                gsap.fromTo('.center-earth-control', { rotateY: '0deg' }, {
+                  rotateY: '90deg', duration: 1, ease: 'expo.out', onComplete() {
+                    action();
+                  }
+                });
+              }
+            }});
+            
+          },
+          controlAnimate() {
+            this.positionTop.isfocusDisabled = true;
+            gsap.fromTo('.position-right', { right: '-25.78%', opacity: 0 }, { right: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out' });
+            gsap.fromTo('.position-center-bottom', { bottom: '-1.27604rem', opacity: 0 }, { bottom: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out' });
+            gsap.fromTo(
+              '.position-left',
+              { left: '-25.78%', opacity: 0 },
+              {
+                left: '0.0833rem',
+                opacity: 1,
+                duration: 2,
+                ease: 'expo.out',
+                onComplete() {
+                  $app.animateNumberItemInner('.left-section');
+                  $app.animateNumberItemInner('.right-section');
+                  // 驱动地球上方数字滚动动画
+                  $app.animateNumberItemInner('.position-center-top');
+                  $app.positionTop.showTracks = true;
+                  $app.positionTop.isfocusDisabled = false
+                }
+              }
+            );
+          },
+          controlAnimateReverse() {
+            this.positionTop.isfocusDisabled = true;
+            gsap.fromTo('.position-right', { right: '0.0833rem', opacity: 1 }, { right: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out' });
+            gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
+            gsap.fromTo('.position-left', { left: '0.0833rem', opacity: 1 }, {
+              left: '-25.78%', opacity: 0, duration: 2, ease: 'expo.out', onComplete() {
+                $app.positionTop.isfocusDisabled = false;
+              }
+            });
+          },
+          // 地球下钻到中国地图
+          animateDownInEarthMap(flightData) {
+            if (!this.$refs.earth.camera || !this.$refs.earth.controls || !this.$refs.earth.earth) return;
+            // 获取地球和地图DOM
+            let earthDom = document.getElementById('my-earth');
+            let earthMapDom = document.getElementById('my-earth-map');
+            // 切换展示模式开关 - 禁用地球相关的模式操作
+            this.isEarthMap = true;
+            // 暂停地球旋转
+            this.positionTop.earthRotation = false;
+            this.$refs.earth.stopRotation();
+            // 转换地球和地图的层级
+            earthDom.style.zIndex = -1;
+            earthMapDom.style.zIndex = 0;
+            // 传入中国中心位置的经纬度2D点位获取两个3D点位
+            let { target, position } = $app.$refs.earth.outReturnAnimationVector({ N: 108.55, E: 40.18994 }, 50);
+            // 获取相机移动当前的最远距离点位
+            let maxDisPoint = $app.$refs.earth.outReturnMaxDisPoint();
+            // 设置地球可以拉近，地球控制器原始minDistance为220
+            $app.$refs.earth.controls.minDistance = 50;
+            // todo - 这里要获取地图的飞线数据 - 加载渲染飞线
+            // $app.$refs.earthMap.addFlightData(flightData);
+            // Step1 - 把地图底部的大圆盘隐掉
+            gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
+            // Step2 - 相机保持视角拉远到最远距离
+            // 初始相机位置(0, 30, -200)
+            gsap.to(this.$refs.earth.camera.position, {
+              x: maxDisPoint.x,
+              y: maxDisPoint.y,
+              z: maxDisPoint.z,
+              duration: 1.5,
+              ease: "power2.out",
+              onUpdate() {
+                $app.$refs.earth.camera.updateMatrixWorld();
+              },
+              onComplete() {
+                // Step3 - 开始渐隐地球
+                gsap.to(earthDom, {
+                  opacity: 0,
+                  duration: 3,
+                  ease: 'slow.out'
+                });
+                // Step4 - 拉近相机
+                gsap.to($app.$refs.earth.camera.position, {
+                  x: position.x,
+                  y: position.y,
+                  z: position.z,
+                  duration: 2,
+                  ease: 'power1.out',
+                  onStart() {
+                    $app.$refs.earth.controls.autoRotate = false;
+                  },
+                  // onUpdate() {
+                  // 注释掉了相机飞过去时实时更改控制器目标为目标点的逻辑
+                  //   $app.$refs.earth.controls.target.copy(target);
+                  //   $app.$refs.earth.controls.update();
+                  // },
+                  onComplete() {
+                    // Step5 - 云层动画
+                    $app.animateCloud();
+                    // 显示地图
+                    gsap.to(earthMapDom, {
+                      opacity: 1,
+                      delay: 1,
+                      duration: 1,
+                      onComplete() {
+                        $app.$refs.earthMap.addFlightData(flightData);
+                      }
+                    })
+                  }
+                });
+              }
+            })
+          },
+          // 从地图上窜到地球
+          animateUpToEarth(){
+            if (!this.$refs.earth.camera || !this.$refs.earth.controls || !this.$refs.earth.earth) return;
+            // 获取地球和地图DOM
+            let earthDom = document.getElementById('my-earth');
+            let earthMapDom = document.getElementById('my-earth-map');
+            // 切换展示模式开关 - 禁用地球相关的模式操作
+            this.isEarthMap = false;
+            // 转换地球和地图的层级
+            earthDom.style.zIndex = 0;
+            earthMapDom.style.zIndex = -1;
+            gsap.to(earthMapDom, {
+              opacity: 0,
+              duration: 1,
+              ease: 'power1.out',
+              onComplete(){
+                let cloudContainer = document.querySelector('.cloud');
+                cloudContainer.style.zIndex = 1;
+                $app.cloudTL.reverse();
+              }
+            });
+            gsap.to(earthDom, {
+              opacity: 1,
+              delay: 2.4,
+              duration: 1,
+              ease: 'power1.out',
+            });
+            gsap.to($app.$refs.earth.camera.position, {
+              x: 0,
+              y: 30,
+              z: -200,
+              duration: 2,
+              onUpdate: () => {
+                // 实时更新控制器的焦点，让相机看向目标点
+                $app.$refs.earth.controls.target.copy(new THREE.Vector3(0, 0, 0));
+                $app.$refs.earth.controls.update();
+              },
+              onComplete(){
+                gsap.fromTo('.position-center-bottom', { bottom: '-1.27604rem', opacity: 0 }, { bottom: '0.0833rem', opacity: 1, duration: 2, ease: 'expo.out' });
+                $app.$refs.earth.controls.minDistance = 220;
+                $app.changeRotation();
+                let cloudContainer = document.querySelector('.cloud');
+                cloudContainer.style.zIndex = -2;
+              }
+            })
+
+
+            // 设置地球可以拉近，地球控制器原始minDistance为220
+            // $app.$refs.earth.controls.minDistance = 50;
+            // 暂停地球旋转
+            // this.positionTop.earthRotation && this.changeRotation();
+          },
+          // 尝试添加云层动画
+          async animateCloud() {
+            let cloudContainer = document.querySelector('.cloud');
+            cloudContainer.style.zIndex = 1;
+            if (this.cloudTL) {
+              this.cloudTL.play();
+            } else {
+              this.cloudTL = gsap.timeline();
+              this.cloudTL.to('.cloud', {
+                opacity: 1,
+                duration: 0.8
+              });
+
+              this.cloudTL.to('.level-1', {
+                scale: 2, 
+                z: 50,
+                opacity: 0,
+                duration: 1
+              }, 0);
+              this.cloudTL.to('.level-2', {
+                scale: 2,
+                z: 0,
+                opacity: 0,
+                duration: 1
+              }, 0.2);
+              this.cloudTL.to('.level-3', {
+                scale: 2,
+                z: -50,
+                opacity: 0,
+                duration: 1,
+                onComplete(){
+                  cloudContainer.style.zIndex = -2;
+                }
+              }, 0.4)
+            }
+          },
+          animateCloudReverse(){
+            let cloudContainer = document.querySelector('.cloud');
+            cloudContainer.style.zIndex = 1;
+            this.cloudTL.reverse();
+            cloudContainer.style.zIndex = -2;
+          },
+          // 根据传入的经纬度坐标点，驱动地球转动到该位置上方
+          // position: { N, E }
+          animateFlyToPoint(point, distance = 220){
+            if (!this.$refs.earth.camera || !this.$refs.earth.controls || !this.$refs.earth.earth) return;
+            // 暂停地球旋转
+            this.positionTop.earthRotation = false;
+            this.$refs.earth.stopRotation();
+            // 传入位置的经纬度2D点位获取两个3D点位
+            const { N = 0, E = 0 } = point;
+            // 设置地球可以拉近，地球控制器原始minDistance为220
+            // $app.$refs.earth.controls.minDistance = 50;
+            $app.$refs.earth.controls.minDistance = 220;
+            let { target, position } = $app.$refs.earth.outReturnAnimationVector({ N, E }, distance);
+            // 获取相机移动当前的最远距离点位
+            let maxDisPoint = $app.$refs.earth.outReturnMaxDisPoint();
+            // 要拉近相机需要把地球下方的圆盘隐掉
+            // gsap.fromTo('.position-center-bottom', { bottom: '0.0833rem', opacity: 1 }, { bottom: '-1.27604rem', opacity: 0, duration: 2, ease: 'expo.out' });
+            // 先拉远相机到最远距离
+            gsap.to(this.$refs.earth.camera.position, {
+              x: maxDisPoint.x,
+              y: maxDisPoint.y,
+              z: maxDisPoint.z,
+              duration: 1.5,
+              ease: "power2.out",
+              onUpdate() {
+                $app.$refs.earth.camera.updateMatrixWorld();
+              },
+              onComplete() {
+                gsap.to($app.$refs.earth.camera.position, {
+                  x: position.x,
+                  y: position.y,
+                  z: position.z,
+                  duration: 2,
+                  ease: 'power1.out',
+                  onStart() {
+                    $app.$refs.earth.controls.autoRotate = false;
+                  },
+                  onUpdate() {
+                    $app.$refs.earth.camera.updateMatrixWorld();
+                    // 注释掉了相机飞过去时实时更改控制器目标为目标点的逻辑
+                    // $app.$refs.earth.controls.target.copy(target);
+                    // $app.$refs.earth.controls.update();
+                  },
+                  onComplete(){
+
+                  }
+                });
+              }
+            });
+          },
+          // 尝试驱动地球下方小球椭圆轨迹旋转
+          animateBalls(){
+            this.balls.forEach((ball, ballIndex) => {
+              ball.tl = gsap.timeline();
+              for (let currentIndex = ball.index;currentIndex < 10;currentIndex++){
+                const opacityIndex = currentIndex === 9 ? 0 : currentIndex;
+                ball.tl.to(`.ball${ball.index}`, {
+                  duration: 1.5,
+                  ease: 'none',
+                  opacity: $app.ballPoints[opacityIndex].opacity,
+                  motionPath: {
+                    path: '#ellipsePath',
+                    align: '#ellipsePath',
+                    alignOrigin: [0.5, 0.5],
+                    start: `${(currentIndex - 1) / 9}`,
+                    end: `${currentIndex / 9}`,
+                  }
+                })
+              }
+              if (ball.index > 1){
+                for (let restart = 0; restart < (ball.index - 1); restart++) {
+                  ball.tl.to(`.ball${ball.index}`, {
+                    opacity: $app.ballPoints[restart].opacity,
+                    duration: 1.5,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: `${restart / 9}`,
+                      end: `${(restart + 1) / 9}`,
+                    }
+                  })
+                }
+              }
+              ball.tl.repeat(-1)
+            })
+          },
+          // 尝试点击小球时停止原所有小球的时间线，聚拢小球
+          animateBallsStopAndPosition(item) {
+            if (this.isBallsPosition) return;
+            this.isBallsPosition = true;
+            // 定位一个标记点小球作为运动标准(找中心点位index为4的小球)
+            let centerIndex = 4;
+            let centerBall = this.balls[centerIndex];
+            // 标记小球的移动目标位置
+            let centerBallTarget = this.ballShowPoints[centerIndex].position;
+            // 标记小球的当前位置： (时间线进度 + index * 1/9) % 1
+            let centerBallCurrent = (centerBall.tl.progress() + (centerIndex / 9)) % 1;
+            // 判断标记点小球是要向前移动 
+            // let isCenterBallGo = centerBallCurrent < centerBallTarget;
+            let isCenterBallGo = true;
+            if (centerBallCurrent > centerBallTarget) {
+              isCenterBallGo = false;
+            } else if (centerBallCurrent < centerBallTarget && centerBallCurrent <= 0.25) {
+              isCenterBallGo = false;
+            }
+            this.balls.forEach((ball, ballIndex) => {
+              ball.tl.pause();
+              if (ball.positionTL) {
+                ball.positionTL.clear();
+              }
+              ball.positionTL = gsap.timeline();
+              // 当前小球的移动进度
+              let currentDis = (ball.tl.progress() + ballIndex * 1 / 9) % 1;
+              let targetDis = $app.ballShowPoints[ballIndex].position;
+              let totalTime = 1.5;
+              // 驱动中心球 当前球就是中心球 前进状态
+              if (ballIndex === centerIndex && isCenterBallGo) {
+                ball.positionTL.to(`.ball${ball.index}`, {
+                  duration: totalTime,
+                  ease: 'none',
+                  motionPath: {
+                    path: '#ellipsePath',
+                    align: '#ellipsePath',
+                    alignOrigin: [0.5, 0.5],
+                    start: currentDis,
+                    end: targetDis
+                  }
+                });
+              }
+              if (ballIndex === centerIndex && !isCenterBallGo && currentDis >= 0.75) {
+                ball.positionTL.to(`.ball${ball.index}`, {
+                  duration: totalTime,
+                  ease: 'none',
+                  motionPath: {
+                    path: '#ellipsePath',
+                    align: '#ellipsePath',
+                    alignOrigin: [0.5, 0.5],
+                    start: currentDis - 1,
+                    end: targetDis - 1
+                  }
+                });
+              }
+              if (ballIndex === centerIndex && !isCenterBallGo && currentDis <= 0.25) {
+                let startTime = (currentDis / (currentDis + 1 - targetDis)) * totalTime;
+                let endTime = totalTime - startTime;
+                ball.positionTL.to(`.ball${ball.index}`, {
+                  duration: startTime,
+                  ease: 'none',
+                  motionPath: {
+                    path: '#ellipsePath',
+                    align: '#ellipsePath',
+                    alignOrigin: [0.5, 0.5],
+                    start: currentDis - 1,
+                    end: -1
+                  }
+                });
+                ball.positionTL.to(`.ball${ball.index}`, {
+                  duration: endTime,
+                  ease: 'none',
+                  motionPath: {
+                    path: '#ellipsePath',
+                    align: '#ellipsePath',
+                    alignOrigin: [0.5, 0.5],
+                    start: 0,
+                    end: targetDis - 1
+                  }
+                });
+              }
+              // 中心球前进 当前球小于中心球
+              if (isCenterBallGo && ballIndex < centerIndex) {
+                if (currentDis < targetDis) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis,
+                      end: targetDis
+                    }
+                  });
+                } else if (currentDis > targetDis) {
+                  let startTime = (1 - currentDis) / (1 - currentDis + targetDis);
+                  let endTime = totalTime - startTime;
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: startTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis,
+                      end: 1
+                    }
+                  });
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: endTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: 0,
+                      end: targetDis
+                    }
+                  });
+                }
+              }
+              // 中心球前进 当前球大于中心球
+              if (isCenterBallGo && ballIndex > centerIndex) {
+                if (currentDis >= 0.25 && currentDis < targetDis) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis,
+                      end: targetDis
+                    }
+                  });
+                }
+                if (currentDis > targetDis) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+                if (currentDis < 0.25 && currentDis < targetDis) {
+                  let startTime = (currentDis / (currentDis + (1 - targetDis))) * totalTime;
+                  let endTime = totalTime - startTime;
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: startTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: -1
+                    }
+                  });
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: endTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: 0,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+              }
+              // 中心球后退 当前球大于中心球
+              if (!isCenterBallGo && ballIndex > centerIndex) {
+                if (currentDis > targetDis) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+                if (currentDis <= targetDis) {
+                  let startTime = currentDis / (currentDis + 1 - targetDis) * totalTime;
+                  let endTime = totalTime - startTime;
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: startTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: -1
+                    }
+                  });
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: endTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: 0,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+              }
+              // 中心球后退 当前球小中心球
+              if (!isCenterBallGo && ballIndex < centerIndex) {
+                if (currentDis > targetDis) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+                if (currentDis < targetDis && currentDis > 0.25) {
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: totalTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis,
+                      end: targetDis
+                    }
+                  });
+                }
+                if (currentDis < targetDis && currentDis <= 0.25) {
+                  let startTime = (currentDis / (currentDis + 1 - targetDis)) * totalTime;
+                  let endTime = totalTime - startTime;
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: startTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: currentDis - 1,
+                      end: -1
+                    }
+                  });
+                  ball.positionTL.to(`.ball${ball.index}`, {
+                    duration: endTime,
+                    ease: 'none',
+                    motionPath: {
+                      path: '#ellipsePath',
+                      align: '#ellipsePath',
+                      alignOrigin: [0.5, 0.5],
+                      start: 0,
+                      end: targetDis - 1
+                    }
+                  });
+                }
+              }
+            });
+          },
+          // 驱动小球开始恢复转圈
+          animateBallsRotate() {
+            if (!this.isBallsPosition) return;
+            this.isBallsPosition = false;
+            this.balls.forEach((ball, ballIndex) => {
+              ball.positionTL.eventCallback("onReverseComplete", () => ball.tl.play());
+              ball.positionTL.reverse();
+            });
+          },
+          // 驱动数字滚动动画 - 需要传入对应区域的外层选择器 - 在数值获取到并转为String后调用
+          animateNumberItemInner(dom) {
+            this.$nextTick(() => {
+              let numContainer = document.querySelector(dom);
+              let numContents = Array.from(numContainer.querySelectorAll('.num-item-inner'));
+              numContents.forEach((num) => {
+                gsap.to(num, { top: `-${(num.dataset.height * num.clientHeight) / 10}`, duration: 3, ease: 'power4.inOut' });
+              });
+            });
+          },
+          // 向下滚动 - 驱动动画显示地球图例及控制器
+          animatePositionTopControls() {
+            this.positionTop.animating = true;
+            this.positionTop.showControls = true;
+            if (!this.positionTop.tl) {
+              this.positionTop.tl = gsap.timeline({
+                // 注册完成回调
+                onComplete() {
+                  $app.positionTop.animating = false;
+                },
+                onReverseComplete() {
+                  $app.positionTop.animating = false;
+                }
+              });
+              let animateItems = gsap.to('.center-top-item', {
+                scale: 0.5,
+                opacity: 0
+              });
+              let animateTopControls = gsap.to('.position-center-top-controls', {
+                opacity: 1,
+                top: 0
+              });
+              this.positionTop.tl.add(animateItems);
+              this.positionTop.tl.add(animateTopControls);
+            } else {
+              this.positionTop.tl.play();
+            }
+          },
+          // 向上滚动 - 驱动动画显示地球图例及控制器
+          animatePositionTopCounts() {
+            this.positionTop.animating = true;
+            this.positionTop.showControls = false;
+            if (this.positionTop.tl) {
+              this.positionTop.tl.reverse();
+            }
+          },
+          // 左下角资源统计动画 - 卫星进入 2000
+          animateResourceLeftBottom(){
+            let tl = gsap.timeline();
+            let leftItem = document.querySelector('.left-item');
+            tl.to('.left-item', { skewX: 0, height: '18.77%', opacity: 1, duration: 1, onComplete(){
+              leftItem.classList.add('show');
+              tl.pause();
+              setTimeout(() => {
+                leftItem.classList.remove('show');
+                tl.play();
+              }, 3000);
+            }});
+            tl.to('.left-item', { skewX: 50, height: '4%', opacity: 0, duration: 1, delay: 1});
+            for (let item of $app.resourceStatis.center){
+              let indexItemDom = document.querySelector(`.center-item-${item.index}`);
+              tl.to(`.center-item-${item.index}`, { rotateY: '0deg', opacity: 1, duration: 1, onComplete(){
+                indexItemDom.classList.add('show');
+                tl.pause();
+                setTimeout(() => {
+                  indexItemDom.classList.remove('show');
+                  tl.play();
+                }, 3000);
+              }});
+              tl.to(`.center-item-${item.index}`, { rotateY: '90deg', opacity: 0, duration: 1, delay: 1 })
+            }
+            tl.to('.bottom-item', { filter: 'blur(0)', opacity: 1, duration: 1.5, onComplete(){
+              tl.pause();
+              setTimeout(() => {
+                tl.play();
+              }, 3000)
+            } });
+            tl.to('.bottom-item', { filter: 'blur(0.03125rem)', opacity: 0, duration: 1.5 });
+            tl.repeat(-1)
+          },
+          // ============> 事件函数
+          datePickerFocus() {
+            this.dateBg = 'select';
+          },
+          datePickerBlur() {
+            this.dateBg = 'default';
+          },
+          // 进入工作台
+          linkToIndex() {
+            this.leaveAnimate(function (){
+              window.location.href = 'index.html';
+            });
+            // setTimeout(() => {
+            //   window.location.href = 'index.html';
+            // }, 1000);
+          },
+          // 退出
+          quit() {
+            this.leaveAnimate(function (){ 
+              let url = 'login.html';
+              let code = sessionStorage.getItem('code'); 
+              // if (code) url += '?logout=1';
+              // 如果是从中台跳转过来的，退出系统时要跳转到中台系统，如果不是就跳转到当前系统的登录页面
+              if (code) {
+                url = window.oauth.redirectUri;
+              } else {
+                // $api.Account.newLogout();
+                $api.Account.Logout();
+              }
+              location.href = url;
+            });
+          },
+          // 初始化数据
+          init() {
+            this.animateBalls();
+            // earthleftdata
+            // this.getEarchDatas();
+            this.getEarthDatasReal();
+            // (地球下方)获取支撑态势图表数据
+            // this.getSupport();
+            // 获取顶部三个数
+            this.getTopThree();
+            // 获取地球右侧数据
+            this.getEarthRight();
+          },
+          // 间隔更新数据
+          update() {
+            // 获取支撑态势图表数据
+            // this.getSupport(true);
+            // 获取顶部三个数
+            this.getTopThree(true);
+            this.getEarthRight(true);
+          },
+          // 安全加固点击自定义图例事件
+          triggleSafeLegend(item){
+            this.charts.safeReinforce.chart.dispatchAction({
+              type: 'legendToggleSelect',
+              name: item.name
+            });
+            item.legendFlag = !item.legendFlag;
+          },
+          // 点击地球的图例 - 控制不同类型的飞线显隐
+          clearFlyLine(key, item) {
+            item.flag = !item.flag;
+            if (this.$refs.earth) {
+              this.$refs.earth.clearFlyLine(key, item.key, item.flag);
+            }
+          },
+          // 地球顶部的数值和地球图例滚轮切换
+          positionTopWheel(e) {
+            if (this.positionTop.isfocus) {
+              return;
+            }
+            // 向下滚动
+            if (e.wheelDelta < 0 && !this.positionTop.showControls && !this.positionTop.animating) {
+              this.animatePositionTopControls();
+            }
+            // 向下滚动
+            if (e.wheelDelta > 0 && this.positionTop.showControls && !this.positionTop.animating) {
+              this.animatePositionTopCounts();
+            }
+          },
+          // 点击地球上方的上滑块激活数据部分动画及显示
+          activeShowControls() {
+            if (this.positionTop.isfocus) {
+              return;
+            }
+            this.animatePositionTopCounts();
+          },
+          // 点击地球上方的下滑块激活专注模式动画及显示
+          deactiveShowControls() {
+            if (this.positionTop.isfocus) {
+              return;
+            }
+            this.animatePositionTopControls();
+          },
+          // 地球上方的控制器暂停 / 恢复地球旋转
+          changeRotation() {
+            if (this.positionTop.earthRotation) {
+              this.positionTop.earthRotation = false;
+              this.$refs.earth.stopRotation();
+            } else {
+              this.positionTop.earthRotation = true;
+              this.$refs.earth.playRotation();
+            }
+          },
+          // 恢复初始地球视角
+          resetCamera() {
+            this.$refs.earth.resetCamera();
+          },
+          // 切换模式
+          changeMode() {
+            if (this.positionTop.isfocusDisabled){
+              return;
+            }
+            if (this.positionTop.isfocus) {
+              this.positionTop.isfocus = false;
+              this.controlAnimate();
+            } else {
+              this.positionTop.isfocus = true;
+              this.controlAnimateReverse();
+            }
+          },
+          changeLineMode() {
+            if (this.positionTop.isDashed) {
+              this.changeFlyLineSolid();
+              this.positionTop.isDashed = false;
+            } else {
+              this.changeFlyLineDashed();
+              this.positionTop.isDashed = true;
+            }
+          },
+          // 新增切换飞线为虚线模式
+          changeFlyLineDashed() {
+            let lineGroup = this.$refs.earth.earth.earthGroup.children.find((item) => {
+              return item.userData['isLinesGroup'];
+            }) || { children: [] };
+            lineGroup.children.forEach((line) => {
+              if (line.material) {
+                line.material.dashSize = 1;
+                line.material.gapSize = 0.5;
+              }
+              line.computeLineDistances();
+            });
+          },
+          // 新增切换飞线为实线模式
+          changeFlyLineSolid() {
+            let lineGroup = this.$refs.earth.earth.earthGroup.children.find((item) => {
+              return item.userData['isLinesGroup'];
+            }) || { children: [] };
+            lineGroup.children.forEach((line) => {
+              if (line.material) {
+                line.material.dashSize = 3;
+                // line.material.dashSize = 0;
+                line.material.gapSize = 0;
+              }
+              line.computeLineDistances();
+            });
+          },
+          // 关闭 / 开启起终点的光柱及波纹
+          closeMarkupPoint() {
+            this.positionTop.showMarkupPoint = !this.positionTop.showMarkupPoint;
+            let markupGroup = this.$refs.earth.earth.earthGroup.children.find((item) => {
+              return item.userData['isMarkupPoint'];
+            }) || { children: [] };
+            markupGroup.children.forEach((item) => {
+              if (item.userData['isLightPillar'] || item.userData['isWaveMesh']) {
+                item.visible = this.positionTop.showMarkupPoint;
+              }
+            });
+          },
+          // 改变飞线段的大小
+          changeFlyLineSize() {
+            if (this.positionTop.flyLineSize == 1) {
+              this.positionTop.flyLineSize = 2;
+            } else if (this.positionTop.flyLineSize == 2) {
+              this.positionTop.flyLineSize = 3;
+            } else {
+              this.positionTop.flyLineSize = 1;
+            }
+            let lineGroups = this.$refs.earth.earth.earthGroup.children.find((item) => {
+              return item.userData['isLinesGroup'];
+            });
+            lineGroups.children.forEach((item) => {
+              item.children[0].material.size = this.positionTop.flyLineSize;
+            });
+          },
+          // resituation - 点击资源视图按钮 
+          showSourceView(){
+            if (this.isEarthMap) return;
+            // 保存一下点击时的当前视图key 
+            let tempCurrentKey = this.currentView.key;
+            this.$refs.earth.clearAllDatas();
+            this.viewChanging = true;
+            // 只要点击了就会发生上面的四个小框变化，所以先驱动动画
+            gsap.fromTo('.center-top-item', { rotateY: '0deg' }, {
+              rotateY: '90deg', duration: 0.4, ease: 'power1.out', onComplete() {
+                if ($app.currentView.key === $app.viewSource.key){
+                  $app.currentView = $app.viewNow;
+                } else {
+                  $app.currentView = $app.viewSource;
+                }
+                gsap.fromTo('.center-top-item', { rotateY: '90deg' }, { rotateY: '0deg', duration: 2, ease: 'expo.out', onComplete(){ 
+                  $app.animateNumberItemInner('.position-center-top');
+                  // 如果点击前就是资源视图
+                  if (tempCurrentKey === $app.viewSource.key) {
+                    $app.$refs.earth.outRenderNetworkView($app.viewNetwork.mapDatas);
+                  } else {
+                    let mapDatas = $app.isBallsPosition ? $app.viewSource.mapDatas.filter(item => item.type === $app.currentBall.type ) : $app.viewSource.mapDatas;
+                    $app.$refs.earth.outRenderSourcePoint(mapDatas);
+                    $app.$refs.earth.outRenderSourceLabel(mapDatas);
+                  }
+                  $app.viewChanging = false;
+                }})
+              }
+            });
+            // renderDatas
+            // clearAllDatas
+          },
+          // resituation - 点击网络视图按钮 
+          showNetworkView() {
+            if (this.isEarthMap) return;
+            // 保存一下点击时的当前视图key 
+            let tempCurrentKey = this.currentView.key;
+            if (tempCurrentKey !== 'now' && tempCurrentKey !== 'network') {
+              this.$refs.earth.clearAllDatas();
+              this.viewChanging = true;
+            }
+            // 只要点击了就会发生上面的四个小框变化，所以先驱动动画
+            gsap.fromTo('.center-top-item', { rotateY: '0deg' }, {
+              rotateY: '90deg', duration: 0.4, ease: 'power1.out', onComplete() {
+                if ($app.currentView.key === $app.viewNetwork.key) {
+                  $app.currentView = $app.viewNow;
+                } else {
+                  $app.currentView = $app.viewNetwork;
+                }
+                gsap.fromTo('.center-top-item', { rotateY: '90deg' }, { rotateY: '0deg', duration: 2, ease: 'expo.out', onComplete() { 
+                  $app.animateNumberItemInner('.position-center-top'); 
+                  if (tempCurrentKey !== 'now' && tempCurrentKey !== 'network'){
+                    $app.$refs.earth.outRenderNetworkView($app.viewNetwork.mapDatas);
+                    $app.viewChanging = false;
+                  }
+                }})
+              }
+            });
+          },
+          // resituation - 点击任务视图按钮 
+          showTaskView() {
+            if (this.isEarthMap) return;
+            // 保存一下点击时的当前视图key 
+            let tempCurrentKey = this.currentView.key;
+            this.$refs.earth.clearAllDatas();
+            this.viewChanging = true;
+            // 只要点击了就会发生上面的四个小框变化，所以先驱动动画
+            gsap.fromTo('.center-top-item', { rotateY: '0deg' }, {
+              rotateY: '90deg', duration: 0.4, ease: 'power1.out', onComplete() {
+                if ($app.currentView.key === $app.viewTask.key) {
+                  $app.currentView = $app.viewNow;
+                } else {
+                  $app.currentView = $app.viewTask;
+                }
+                gsap.fromTo('.center-top-item', { rotateY: '90deg' }, { rotateY: '0deg', duration: 2, ease: 'expo.out', onComplete() { 
+                  $app.animateNumberItemInner('.position-center-top'); 
+                  if (tempCurrentKey === $app.viewTask.key){
+                    $app.$refs.earth.outRenderNetworkView($app.viewNetwork.mapDatas);
+                    $app.viewChanging = false;
+                  } else {
+                    $app.viewChanging = false;
+                  }
+                } })
+              }
+            });
+          },
+          // 点击大圆盘的资源小球
+          clickBall(ball){
+            let mapDatas = this.viewSource.mapDatas;
+            // 地球视图切换中，阻止此事件
+            if (this.viewChanging) return;
+            this.viewChanging = true;
+            this.$refs.earth.clearAllDatas();
+            if (this.currentView.key !== this.viewSource.key){
+              gsap.fromTo('.center-top-item', { rotateY: '0deg' }, {
+                rotateY: '90deg', duration: 0.4, ease: 'power1.out', onComplete(){
+                  $app.currentView = $app.viewSource;
+                  gsap.fromTo('.center-top-item', { rotateY: '90deg' }, { rotateY: '0deg', duration: 2, ease: 'expo.out', onComplete(){
+                    $app.animateNumberItemInner('.position-center-top');
+                  }})
+                }
+              })
+            }
+            if (!this.currentBall) {
+              this.currentBall = ball;
+              this.animateBallsStopAndPosition();
+              mapDatas = mapDatas.filter(data => data.type === ball.type);
+              this.$refs.earth.outRenderSourcePoint(mapDatas);
+              this.$refs.earth.outRenderSourceLabel(mapDatas);
+            } else if (this.currentBall && this.currentBall.type !== ball.type) {
+              this.currentBall = ball;
+              mapDatas = mapDatas.filter(data => data.type === ball.type);
+              this.$refs.earth.outRenderSourcePoint(mapDatas);
+              this.$refs.earth.outRenderSourceLabel(mapDatas);
+            } else if (this.currentBall && this.currentBall.type === ball.type) {
+              this.currentBall = null;
+              this.animateBallsRotate();
+              this.$refs.earth.outRenderSourcePoint(mapDatas);
+              this.$refs.earth.outRenderSourceLabel(mapDatas);
+            }
+            this.viewChanging = false;
+          },
+          // ============> 数据函数
+          // 获取地球的跳转数据
+          getEarchDatas() {
+            // $app.$refs.earth.init();
+            $api.situation.getEarth(
+              {},
+              function (res) {
+                if (res.code === 200 && res.data && Array.isArray(res.data.earth) && res.data.earth.length > 0) {
+                  $app.jumps = res.data.earth;
+                  $app.$refs.earth.init();
+                } else {
+                  $app.$refs.earth.init();
+                } 
+              },
+              function (err) {
+                console.log(err);
+                $app.$refs.earth.init();
+              },
+              function () {
+                // 调整调用页面进入动画的时机，改在地球加载后调用
+                $app.enterAnimate();
+                setTimeout(() => {
+                  $app.changeRotation();
+                }, 8000);
+              }
+            );
+          },
+          // 获取地球数据 - 真实版
+          getEarthDatasReal(){
+            let labels = ['zlkz', 'sjhc', 'xxts'];
+            $api.situation.getEarthReal(
+              {},
+              function (res){
+                console.log('真实的地球数据')
+                console.log(res);
+                if (res.code === 200 && res.data && Array.isArray(res.data.edges) && Array.isArray(res.data.nodes) && res.data.edges.length === res.data.nodes.length){
+                  let timeStart = Date.now();
+                  // console.log(`开始 - ${timeStart}`)
+                  let { nodes, edges } = res.data;
+                  let result = [];
+                  edges.forEach((endArr, nodeIndex) => {
+                    let node = {
+                      startArray: nodes[nodeIndex],
+                      endArray: []
+                    };
+                    endArr.forEach((end, endIndex) => {
+                      let endCode = end.toString(2).padStart(5, '0');
+                      let lineStr = endCode.slice(3);
+                      let lineCode = endCode.slice(0, 3);
+                      let lines = lineCode.split('');
+                      let statusCode = endCode.slice(3);
+                      // console.log('图表码')
+                      // console.log(endCode)
+                      if (end !== 0 && statusCode !== '00'){
+                        lines.forEach((line, lineType) => {
+                          if (line !== '0'){
+                            let status = 'tc'
+                            switch(statusCode){
+                              case '01':
+                                status = 'tc';
+                                break;
+                              case '11':
+                                status = 'yj';
+                                break;
+                              case '10':
+                                status = 'zd';
+                                break;
+                            }
+                            let endNode = {
+                              name: nodes[endIndex].name,
+                              N: nodes[endIndex].N,
+                              E: nodes[endIndex].E,
+                              label: labels[lineType],
+                              status
+                            }
+                            nodeIndex !== endIndex && node.endArray.push(endNode);
+                          }
+                        });
+                      }
+                    });
+                    result.push(node);
+                  });
+                  let timeEnd = Date.now();
+                  // console.log(`结束 - ${timeEnd}`)
+                  // console.log(`处理地球数据用时: ${timeEnd - timeStart}ms`)
+                  // console.log(result)
+                  $app.jumps = result;
+                  $app.viewNetwork.mapDatas = result;
+                }
+                $app.$refs.earth.init();
+              },
+              function (err){
+                console.log(err);
+                $app.$refs.earth.init();
+              },
+              function(){
+                $app.enterAnimate();
+                setTimeout(() => {
+                  $app.changeRotation();
+                }, 8000);
+              }
+            )
+          },
+          // 获取首页顶端前三项数据
+          getTopThree(isUpdate) {
+            Promise.all([
+              new Promise((resolve, reject) => {
+                $api.situation.newGetTop(
+                  {},
+                  function (res){
+                    if (res.code === 200 && res.data){
+                      $app.viewNow.centerTop[0].value = (res.data?.active_channel || '0') + '';
+                      // $app.centerTop[1].value = (res.data?.network_load || '0') + '';
+                      $app.viewNow.centerTop[1].value = typeof res.data.network_load === 'number' ? (res.data.network_load * 100).toFixed(2) : '0' + '';
+                      $app.viewNow.centerTop[2].value = (res.data?.real_time_session || '0') + '';
+                    }
+                    console.log('获取顶部的三个数')
+                    console.log(res);
+                  },
+                  function (err){
+                    console.log(err)
+                  },
+                  function(){
+                    resolve();
+                  }
+                );
+              }),
+              new Promise((resolve, reject) => {
+                $api.situation.newGetTopLast({}, function(res){
+                  console.log('获取顶部最后一个数据')
+                  console.log(res)
+                  if (res.code === 200 && res.data && Array.isArray(res.data.list) && res.data.list.length > 0){
+                      $app.viewNow.centerTop[3].value = (res.data.list.at(-1).success_rate || '100') + '';
+                  } else {
+                      $app.viewNow.centerTop[3].value = '100';
+                  }
+                }, function (err){
+                    console.log(err)
+                }, function(){
+                    resolve();
+                })
+              })
+            ])
+              .then(() => {
+                isUpdate && $app.animateNumberItemInner('.position-center-top');
+              })
+            
+          },
+          // 获取地球下方支撑态势图表 数据
+          getSupport(isUpdate) {
+            let option = JSON.parse(JSON.stringify(supportOption));
+            option.color = ['#3A89FF'];
+            !isUpdate && $app.deelSupportError(option);
+            const reqParams = {
+              start_time: this.charts.transfer.params.start_time,
+              end_time: this.charts.transfer.params.end_time
+            };
+            $api.situation.getSupport(
+              { params: reqParams },
+              function (res) {
+                if (res.code === 200 && res.data && Array.isArray(res.data.time) && Array.isArray(res.data.percent) && Array.isArray(res.data.total)) {
+                  !isUpdate && $app.charts.support.chart && $app.charts.support.chart.clear();
+                  let { time, percent, total } = res.data;
+                  option.xAxis.data =
+                    Array.isArray(time) && time.length > 0
+                      ? time.map((t) => {
+                          return new Date(t).toLocaleString();
+                        })
+                      : [];
+                  option.series = [];
+                  option.legend.data = [];
+                  option.series.push({
+                    name: '任务数量',
+                    yAxisIndex: 0,
+                    data: total,
+                    type: 'bar',
+                    itemStyle: {
+                      color: '#05fcfc'
+                    }
+                  });
+                  option.series.push({
+                    name: '执行成功率',
+                    yAxisIndex: 1,
+                    data: percent,
+                    type: 'line',
+                    // symbol: 'none',
+                    symbolSize: 6,
+                    // smooth: true,
+                    lineStyle: {
+                      width: 1,
+                      // color:  'rgba(38, 249, 195, 1)'
+                      color: 'rgb(58, 137, 255)'
+                    },
+                    areaStyle: {
+                      color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        // { offset: 0, color: linearChartColors[3]},
+                        // { offset: 1, color: transparentColors[3]}
+                        { offset: 0, color: 'rgba(58, 137, 255, .7)' },
+                        { offset: 1, color: 'rgba(58, 137, 255, 0)' }
+                      ])
+                    }
+                  });
+                  option.tooltip.formatter = (params) => {
+                    // let results = params.map(pItem => `<div class='flex_between'><span>${pItem.marker}${pItem.seriesName}</span>&emsp;<span>${pItem.value} bps</span></div>`);
+                    let results = params.map((pItem) => {
+                      let unit = pItem.seriesType === 'line' ? '%' : '个';
+                      let value = pItem.seriesType === 'line' ? pItem.value.toFixed(2) : pItem.value;
+                      return `<div class='flex_between'><span>${pItem.marker}${pItem.seriesName}</span>&emsp;<span>${value} ${unit}</span></div>`;
+                    });
+                    results.unshift(params[0].axisValue);
+                    return results.join('');
+                  };
+                  option.legend.data.push('执行成功率', '任务数量');
+                  $app.setCharts('support', 'support-chart', option);
+                } else {
+                  $app.deelSupportError(option);
+                }
+              },
+              function (err) {
+                console.log(err);
+                $app.deelSupportError(option);
+              }
+            );
+          },
+          // 处理支撑态势数据错误或为空
+          deelSupportError(option) {
+            let now = Date.now();
+            let times = [];
+            times.length = 8;
+            times.fill(now);
+            times = times.map((item, index) => {
+              return new Date(item - 600000 * index).toLocaleString();
+            });
+            times.reverse();
+            option.xAxis.data = times;
+            option.series = [];
+            option.legend.data = [];
+            // option.yAxis[0].splitLine.show = true;
+            // option.yAxis[0].splitLine.showMinLine = true;
+            // option.yAxis[0].splitLine.showMaxLine = true;
+            // option.yAxis[0].max = 10;
+            // option.yAxis[0].min = 5;
+            option.yAxis[1].splitLine.show = true;
+            option.yAxis[1].splitLine.showMinLine = true;
+            option.yAxis[1].splitLine.showMaxLine = true;
+            option.yAxis[1].max = 100;
+            option.yAxis[1].min = 0;
+            option.yAxis[0].splitLine.show = false;
+            $app.setCharts('support', 'support-chart', option);
+          },
+          // earthleftdata
+          // 获取地球左侧资源分布数据 - 饼图和折线图
+          getResourceDistribution(isUpdate){
+            let dataKeys = ['vps', 'tor', 'jc_proxy', 'res_proxy', 'iot'];
+            let times = [];
+            let uses = [];
+            let totals = [];
+            let pie3dDatas = [];
+            let datas = {
+              vps: {
+                use: [],
+                total: []
+              },
+              tor: {
+                use: [],
+                total: []
+              },
+              jc_proxy: {
+                use: [],
+                total: []
+              },
+              res_proxy: {
+                use: [],
+                total: []
+              },
+              iot: {
+                use: [],
+                total:[]
+              }
+            };
+            $api.situation.newGetEarthLeftDistribute({}, function (res){
+              if (res.code === 200 && Array.isArray(res.data) && res.data.length > 0){
+                let result = res.data;
+                dataKeys.forEach(key => {
+                  let typeDatas = result.filter(item => item.type === key);
+                  let typeUse = Array.isArray(typeDatas) && typeDatas.length > 0 ? typeDatas.filter(data => data.dimension === 'use') : [];
+                  let typeTotal = Array.isArray(typeDatas) && typeDatas.length > 0 ? typeDatas.filter(data => data.dimension === 'total') : [];
+                  typeUse.sort((a, b) => {
+                    let dateA = a.time.split(/[- :]/);
+                    let dateB = b.time.split(/[- :]/);
+                    for (let i = 0; i < dateA.length; i++) {
+                      if (parseInt(dateA[i], 10) > parseInt(dateB[i], 10)) {
+                        return 1;
+                      } else if (parseInt(dateA[i], 10) < parseInt(dateB[i], 10)) {
+                        return -1;
+                      }
+                    }
+                    return 0;
+                  });
+                  typeTotal.sort((a, b) => {
+                    let dateA = a.time.split(/[- :]/);
+                    let dateB = b.time.split(/[- :]/);
+                    for (let i = 0; i < dateA.length; i++) {
+                      if (parseInt(dateA[i], 10) > parseInt(dateB[i], 10)) {
+                        return 1;
+                      } else if (parseInt(dateA[i], 10) < parseInt(dateB[i], 10)) {
+                        return -1;
+                      }
+                    }
+                    return 0;
+                  });
+                  times = typeTotal.map(total => total.time);
+                  datas[key].use = typeUse.map(use => use.count);
+                  datas[key].total = typeTotal.map(total => total.count);
+                });
+                pie3dDatas = dataKeys.map((key, ind) => {
+                  let item = { name: key, value: datas[key].use.at(-1), itemStyle: { opacity: 0.7, color: pieChart3dColors[ind]} }
+                  return item;
+                });
+                times.forEach((time, index) => {
+                  uses[index] = dataKeys.reduce((counts, key) => {
+                    counts += datas[key].use[index];
+                    return counts;
+                  }, 0);
+                  totals[index] = dataKeys.reduce((counts, key) => {
+                    counts += datas[key].total[index];
+                    return counts;
+                  }, 0);
+                });
+
+              }
+              $app.getDistributionLine({
+                times,
+                uses,
+                totals
+              }, isUpdate);
+            }, function (err){
+              console.log(err)
+              $app.getDistributionLine({
+                times,
+                uses,
+                totals
+              }, isUpdate);
+            })
+          },
+          // 获取地球右侧总体数据
+          getEarthRight(isUpdate){
+            let safeReinforceCounts = {
+              '中影响漏洞数': 0,
+              '中影响配置脆弱点': 0,
+              '低影响漏洞数': 0,
+              '低影响配置脆弱点': 0,
+              '高影响漏洞数': 0,
+              '高影响配置脆弱点': 0
+            }
+            let safeReinforceRates = {
+              '中影响漏洞修复率': 0,
+              '中影响配置加固率': 0,
+              '低影响漏洞修复率': 0,
+              '低影响配置加固率': 0,
+              '高影响漏洞修复率': 0,
+              '高影响配置加固率': 0
+            }
+            let safeRiskTopDatas = {};
+            let countrys = {};
+            let warningList = [];
+            $api.situation.newGetEarthRight({}, function (res){
+              if (res.status_code === 200 && res.data){
+                let safeReinforce = res.data['安全加固状态'];
+                let safeRisk = res.data['安全风险统计'];
+                let warning = res.data['威胁预警信息'];
+                if (safeReinforce && typeof safeReinforce === 'object'){
+                  safeReinforce['影响程度分布'] && (safeReinforceCounts = safeReinforce['影响程度分布']);
+                  safeReinforce['影响程度修复率分布'] && (safeReinforceRates = safeReinforce['影响程度修复率分布']);
+                }
+                if (safeRisk && safeRisk['风险防御攻击次数分月统计'] && safeRisk['风险防御防御率分月统计']){
+                  let times = Object.keys(safeRisk['风险防御攻击次数分月统计']);
+                  let totals = Object.keys(safeRisk['风险防御攻击次数分月统计']).map(item => {
+                    return safeRisk['风险防御攻击次数分月统计'][item];
+                  });
+                  let percents = Object.keys(safeRisk['风险防御防御率分月统计']).map(item => {
+                    let percent = safeRisk['风险防御防御率分月统计'][item];
+                    return typeof percent === 'number' ? (percent * 100).toFixed(2) * 1 : 0;
+                  });
+                  safeRiskTopDatas.times = times;
+                  safeRiskTopDatas.totals = totals;
+                  safeRiskTopDatas.percents = percents;
+                }
+                if (safeRisk && safeRisk['攻击源国家top10']){
+                  countrys = safeRisk['攻击源国家top10'];
+                }
+                if (safeRisk && safeRisk['安全风险分类别统计']){
+                  let times = Object.keys(safeRisk['安全风险分类别统计']);
+                  let totals = times.map(key => safeRisk['安全风险分类别统计'][key]['风险数量']);
+                  let percents = times.map(key => {
+                    // safeRisk['安全风险分类别统计'][key]['研判覆盖率']
+                    let percent = safeRisk['安全风险分类别统计'][key]['研判覆盖率'];
+                    return typeof percent === 'number' ? (percent * 100).toFixed(2) * 1 : 0;
+                  });
+                }
+                if (warning && Array.isArray(warning.latest_alert) && warning.latest_alert.length > 0){
+                  warningList = warning.latest_alert;
+                }
+                // 处理安全加固状态上方数据
+                $app.initSafeReinforceTop(safeReinforce);
+                // 处理安全加固状态下方图表及数据
+                $app.getSafeReinforcePie(safeReinforceCounts, safeReinforceRates, isUpdate);
+              }
+            }, function(err){
+              console.log(err);
+              // 处理安全加固状态下方图表及数据
+              $app.getSafeReinforcePie(safeReinforceCounts, safeReinforceRates, isUpdate);
+            }, function(){
+              isUpdate && $app.animateNumberItemInner('.position-right-container');
+            });
+          },
+          // 处理安全加固上方数据
+          initSafeReinforceTop(data){
+            if(data && typeof data === 'object'){
+              $app.safeReinforce.bug.count = typeof data['漏洞修复个数'] === 'number' ? data['漏洞修复个数'] + '' : '0';
+              $app.safeReinforce.bug.rate = typeof data['漏洞修复率'] === 'number' ? (data['漏洞修复率'] * 100).toFixed(1) * 1 : 0;
+              $app.safeReinforce.config.count = typeof data['配置加固个数'] === 'number' ? data['配置加固个数'] + '' : '0';
+              $app.safeReinforce.config.rate = typeof data['配置加固率'] === 'number' ? (data['配置加固率'] * 100).toFixed(1) * 1 : 0;
+            }
+          },
+          // 处理安全加固饼图及右侧数据
+          getSafeReinforcePie(counts, rates, isUpdate){
+            !isUpdate && $app.charts.safeReinforce.chart && $app.charts.safeReinforce.chart.clear();
+            let option = JSON.parse(JSON.stringify(defaultPieOption));
+            option.tooltip.formatter = (params) => {
+              // return `${params.marker}${params.name}&emsp;${params.value} 个 ${params.data.logPercent}%`;
+              return `${params.marker}${params.name}&emsp;${params.value} 个`;
+            };
+            let pieData = [
+              { name: '高影响漏洞数', value: 0, rate: 0, rightRate: 0, labelName: '高影响漏洞修复率' },
+              { name: '中影响漏洞数', value: 0, rate: 0, rightRate: 0, labelName: '中影响漏洞修复率' },
+              { name: '低影响漏洞数', value: 0, rate: 0, rightRate: 0, labelName: '低影响漏洞修复率' },
+              { name: '高影响配置脆弱点', value: 0, rate: 0, rightRate: 0, labelName: '高影响配置加固率' },
+              { name: '中影响配置脆弱点', value: 0, rate: 0, rightRate: 0, labelName: '中影响配置加固率' },
+              { name: '低影响配置脆弱点', value: 0, rate: 0, rightRate: 0, labelName: '低影响配置加固率' },
+            ];
+            option.series[0].data = [];
+            pieData = pieData.map(item => {
+              item.value = counts[item.name] || 0;
+              item.rightRate = rates[item.labelName] || 0;
+              return item;
+            });
+            pieData.forEach((item, index) => {
+              option.series[0].data.push({
+                value: item.value,
+                name: item.name,
+                type: 'pie',
+                logPercent: (100 * item.rate).toFixed(2),
+                itemStyle: { borderRadius: 3, color: pieChartColors[index],  }
+              });
+              option.legend.data.push(item.name);
+              let it = Object.assign({}, item);
+              it.legendFlag = true;
+              let findLabelItem = $app.charts.safeReinforce.data.find(labelItem => labelItem.labelName === item.labelName);
+              if ($app.charts.safeReinforce.data.length > 0 && findLabelItem){
+                findLabelItem.rightRate = it.rightRate;
+                findLabelItem.name = it.name;
+                findLabelItem.value = it.value;
+                findLabelItem.rate = it.rate;
+              } else {
+                $app.charts.safeReinforce.data.push(it);
+              }
+            });
+            $app.setCharts('safeReinforce', 'reinforce-pie-chart', option);
+          },
+          // second - 获取资源分布中间折线图数据
+          getDistributionLine(datas, isUpdate){
+            let option = JSON.parse(JSON.stringify(transferOption));
+            option.color = resourceLineChartColors;
+            !isUpdate && $app.charts.distributionLine.chart && $app.charts.distributionLine.chart.clear();
+            !isUpdate && $app.deelDistributionError(option)
+            option.yAxis.splitLine.show = true;
+            option.yAxis.splitLine.showMinLine = true;
+            option.yAxis.splitLine.showMaxLine = true;
+            option.yAxis.name = undefined;
+            option.series = [];
+            option.legend.data = [];
+            option.grid.top = setChartSize(10);
+
+            // 填充x时间轴
+            let now = Date.now();
+            let times = [];
+            times.length = 8;
+            times.fill(now);
+            times = times.map((item, index) => {
+              return new Date(item - 600000 * index).toLocaleString();
+            });
+            times.reverse();
+            option.xAxis.data = datas.times && datas.times.length > 0 ? datas.times : times;
+            option.yAxis.min = function (value){
+              let result = Number.isNaN(value.min) ? 5 : null;
+              return result;
+            }
+            option.yAxis.max = function (value){
+              let result = Number.isNaN(value.max) ? 5 : null;
+              return result;
+            }
+            option.yAxis.axisLabel.formatter = function (value) {
+              // if (value > 1000){
+              // 	return (value / 1000).toFixed(0) + 'K';
+              // }
+              // return $app.deelTransferRatio(value);
+              let formatObj = $app.formatNumsData(value)
+              return formatObj.value + formatObj.unit;
+            };
+            option.yAxis.splitNumber = 3
+            // 填充y值轴
+            option.series.push({
+              // name: item.name,
+              name: '资源总量可用',
+              data: datas.totals && datas.totals.length > 0 ? datas.totals : [],
+              // data: [],
+              type: 'line',
+              symbol: 'none',
+              // symbol: 'emptyCircle',
+              // smooth: true,
+              lineStyle: { width: 1 },
+              areaStyle: { color: null }
+            });
+            option.series.push({
+              // name: item.name,
+              name: '资源使用量',
+              data: datas.uses && datas.uses.length > 0 ? datas.uses : [],
+              // data: [],
+              type: 'line',
+              symbol: 'none',
+              // symbol: 'emptyCircle', 
+              // smooth: true,
+              lineStyle: { width: 1 },
+              areaStyle: { color: null }
+            });
+            option.legend = {
+              show: true,
+              orient: 'horizontal',
+              left: 'center',
+              bottom: 0,
+              align: 'auto',
+              backgroundColor: 'rgba(0,0,0,0)',
+              borderColor: '#ccc',
+              borderRadius: 0,
+              borderWidth: 0,
+              padding: setChartSize(5),
+              itemGap: setChartSize(10),
+              // itemWidth: setChartSize(25),
+              // itemHeight: setChartSize(14),
+              itemWidth: setChartSize(20),
+              itemHeight: setChartSize(2),
+              textStyle: {
+                color: '#868e97',
+                fontSize: setChartSize(14)
+              },
+              icon: 'roundRect'
+            };
+            option.legend.data = ['资源总量可用', '资源使用量'];
+            // secondchart - 资源储备
+            option.tooltip.formatter = function (params){
+              let results = params.map((pItem) => {
+                let value = $app.formatNumsData(pItem.value).value + $app.formatNumsData(pItem.value).unit;
+                return `<div class='flex_between'><span>${pItem.marker}${pItem.seriesName}</span>&emsp;<span>${value} 个</span></div>`;
+              });
+              results.unshift(params[0].axisValue);
+              return results.join('');
+            }
+            // 统一处理颜色渐变样式
+            option.series.forEach((item, index) => {
+              item.areaStyle.color = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: resourceLineChartLinearColors[index] },
+                { offset: 1, color: resourceLineChartTransparentColors[index] }
+              ]);
+            });
+            $app.setCharts('distributionLine', 'distribution-line-chart', option);
+          },
+          deelDistributionError(option){
+            option.yAxis.splitLine.show = true;
+            option.yAxis.splitLine.showMinLine = true;
+            option.yAxis.splitLine.showMaxLine = true;
+            option.yAxis.max = 10;
+            option.yAxis.min = 5;
+            option.series = [];
+            option.legend.data = [];
+            option.xAxis.show = true;
+            option.xAxis.axisLine = {show: true};
+            option.xAxis.axisTick = { show: true};
+            option.xAxis.axisLabel.show = true;
+            option.yAxis.show = true;
+            $app.setCharts('distributionLine', 'distribution-line-chart', option);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

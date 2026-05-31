@@ -1786,9 +1786,9 @@ const EarthMap = {
       } else {
         flightSeries.data = data;
       }
-      // this.setMap();
+      this.setMap();
       console.log('添加飞线数据测试！！！！')
-      this.map.addLinkLayer(this.options)
+      // this.map.addLinkLayer(this.options)
     }
   }
 }
